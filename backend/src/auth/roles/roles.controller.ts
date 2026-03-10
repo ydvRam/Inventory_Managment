@@ -21,6 +21,11 @@ export class RolesController {
     return this.rolesService.findAll();
   }
 
+  @Get('seed')
+  seedDefaults() {
+    return this.rolesService.seedDefaultRoles();
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.rolesService.findById(id);

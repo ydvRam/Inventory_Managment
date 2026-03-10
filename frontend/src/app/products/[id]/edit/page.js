@@ -1,0 +1,174 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import Link from "next/link";
+import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
+
+export default function EditProductPage() {
+  const router = useRouter();
+  const params = useParams();
+  const id = params?.id;
+  const [categories, setCategories] = useState([]);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [sku, setSku] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [stockLevel, setStockLevel] = useState(0);
+  const [reorderPoint, setReorderPoint] = useState(0);
+  const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [loadingProduct, setLoadingProduct] = useState(true);
+
+  useEffect(() => {
+    if (!getStoredUser()?.id) {
+      router.replace("/login");
+      return;
+    }
+    const token = getAuthHeaders();
+    Promise.all([
+      fetch(getApiUrl("categories"), { headers: token }).then((r) => (r.ok ? r.json() : [])),
+      fetch(getApiUrl(`products/${id}`), { headers: token }).then((r) => {
+        if (r.status === 401 || r.status === 403) router.replace("/login");
+        return r.ok ? r.json() : null;
+      }),
+    ]).then(([cats, product]) => {
+      setCategories(Array.isArray(cats) ? cats : []);
+      if (product) {
+        setName(product.name);
+        setDescription(product.description ?? "");
+        setSku(product.sku);
+        setCategoryId(product.categoryId ?? "");
+        setStockLevel(product.stockLevel ?? 0);
+        setReorderPoint(product.reorderPoint ?? 0);
+      }
+    }).catch(() => setErr("Failed to load"))
+      .finally(() => setLoadingProduct(false));
+  }, [id, router]);
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    setErr("");
+    if (!categoryId) {
+      setErr("Select a category");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(getApiUrl(`products/${id}`), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({
+          name,
+          description: description || null,
+          sku,
+          categoryId,
+          stockLevel: Number(stockLevel) || 0,
+          reorderPoint: Number(reorderPoint) || 0,
+        }),
+      });
+      const data = await res.json();
+      if (res.status === 401 || res.status === 403) router.replace("/login");
+      else if (!res.ok) throw new Error(data.message || "Failed to update");
+      else router.push("/products");
+    } catch (e) {
+      setErr(e.message || "Failed to update product");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loadingProduct) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-stone-500">Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen p-6 max-w-md mx-auto">
+      <h1 className="text-2xl font-semibold text-stone-900 mb-6">Edit product</h1>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1.5">Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="w-full px-3.5 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1.5">Description</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+            className="w-full px-3.5 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1.5">SKU</label>
+          <input
+            type="text"
+            value={sku}
+            onChange={(e) => setSku(e.target.value)}
+            required
+            className="w-full px-3.5 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-stone-700 mb-1.5">Category</label>
+          <select
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            required
+            className="w-full px-3.5 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white cursor-pointer"
+          >
+            <option value="">Select category</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1.5">Stock level</label>
+            <input
+              type="number"
+              min={0}
+              value={stockLevel}
+              onChange={(e) => setStockLevel(e.target.value)}
+              className="w-full px-3.5 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1.5">Reorder point</label>
+            <input
+              type="number"
+              min={0}
+              value={reorderPoint}
+              onChange={(e) => setReorderPoint(e.target.value)}
+              className="w-full px-3.5 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
+            />
+          </div>
+        </div>
+        {err && <p className="text-sm text-red-600">{err}</p>}
+        <div className="flex gap-3 pt-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
+          >
+            {loading ? "Saving..." : "Save changes"}
+          </button>
+          <Link href="/products" className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50">
+            Cancel
+          </Link>
+        </div>
+      </form>
+    </div>
+  );
+}

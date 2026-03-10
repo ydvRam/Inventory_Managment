@@ -88,4 +88,20 @@ export class RolesService {
       : [];
     return this.roleRepository.save(role);
   }
+
+  async seedDefaultRoles(): Promise<Role[]> {
+    const defaults = [
+      { name: 'admin', description: 'Administrator with full access' },
+      { name: 'user', description: 'Standard user' },
+    ];
+    const created: Role[] = [];
+    for (const dto of defaults) {
+      const existing = await this.findByName(dto.name);
+      if (!existing) {
+        const role = await this.create(dto);
+        created.push(role);
+      }
+    }
+    return created;
+  }
 }

@@ -6,6 +6,9 @@ import { AppService } from './app.service';
 import { UserRolesAccessModule } from './auth/user-roles-access/user-roles-access.module';
 import { AuthModule } from './auth/auth.module';
 import { ProductManagementModule } from './product-management/product-management.module';
+import { SuppliersModule } from './suppliers/suppliers.module';
+import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
+import { InventoryModule } from './inventory/inventory.module';
 
 @Module({
   imports: [
@@ -30,6 +33,9 @@ import { ProductManagementModule } from './product-management/product-management
     UserRolesAccessModule,
     AuthModule,
     ProductManagementModule,
+    SuppliersModule,
+    PurchaseOrdersModule,
+    InventoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -9,6 +9,9 @@ import { ProductManagementModule } from './product-management/product-management
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { PurchaseOrdersModule } from './purchase-orders/purchase-orders.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { CustomersModule } from './customers/customers.module';
+import { SalesOrdersModule } from './sales-orders/sales-orders.module';
+import { InvoicesModule } from './invoices/invoices.module';
 
 @Module({
   imports: [
@@ -36,6 +39,9 @@ import { InventoryModule } from './inventory/inventory.module';
     SuppliersModule,
     PurchaseOrdersModule,
     InventoryModule,
+    CustomersModule,
+    SalesOrdersModule,
+    InvoicesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

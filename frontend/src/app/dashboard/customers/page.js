@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { HiOutlinePlus } from "react-icons/hi2";
 import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 
 export default function UserCustomersPage() {
@@ -36,7 +38,16 @@ export default function UserCustomersPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold text-stone-900 mb-6">Customers</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-xl font-semibold text-stone-900">Customers</h1>
+        <Link
+          href="/dashboard/customers/new"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-medium"
+        >
+          <HiOutlinePlus className="w-5 h-5" />
+          Create customer
+        </Link>
+      </div>
       {err && <p className="text-sm text-red-600 mb-4">{err}</p>}
       <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
         <table className="w-full text-left text-sm">

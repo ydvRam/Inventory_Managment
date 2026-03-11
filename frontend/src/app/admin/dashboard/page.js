@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   HiOutlineCube,
@@ -11,16 +12,16 @@ import {
   HiOutlineShoppingBag,
   HiOutlineDocumentText,
 } from "react-icons/hi2";
+import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 import { SalesChart, PurchaseVsSalesChart, MonthlyRevenueChart } from "@/components/admin/DashboardCharts";
 import { RecentOrdersTable, LowStockProductsTable, RecentPaymentsTable } from "@/components/admin/DashboardTables";
 
-// Placeholder data – replace with API calls later
-const stats = [
-  { label: "Total Products", value: "0", icon: HiOutlineCube, color: "teal" },
-  { label: "Total Customers", value: "0", icon: HiOutlineUsers, color: "blue" },
-  { label: "Total Orders", value: "0", icon: HiOutlineShoppingCart, color: "amber" },
-  { label: "Total Revenue", value: "$0", icon: HiOutlineCurrencyDollar, color: "emerald" },
-  { label: "Low Stock Items", value: "0", icon: HiOutlineExclamationTriangle, color: "red" },
+const statsConfig = [
+  { key: "totalProducts", label: "Total Products", icon: HiOutlineCube, color: "teal", format: "number" },
+  { key: "totalCustomers", label: "Total Customers", icon: HiOutlineUsers, color: "blue", format: "number" },
+  { key: "totalOrders", label: "Total Orders", icon: HiOutlineShoppingCart, color: "amber", format: "number" },
+  { key: "totalRevenue", label: "Total Revenue", icon: HiOutlineCurrencyDollar, color: "emerald", format: "currency" },
+  { key: "lowStockItems", label: "Low Stock Items", icon: HiOutlineExclamationTriangle, color: "red", format: "number" },
 ];
 
 const colorClasses = {
@@ -35,10 +36,53 @@ const quickActions = [
   { label: "Add Product", href: "/admin/products/new", icon: HiOutlinePlusCircle, color: "blue" },
   { label: "Create Purchase Order", href: "/admin/purchase-orders/new", icon: HiOutlineShoppingBag, color: "blue" },
   { label: "Create Sales Order", href: "/admin/sales-orders/new", icon: HiOutlineShoppingCart, color: "blue" },
-  { label: "Generate Invoice", href: "/admin/invoices/new", icon: HiOutlineDocumentText, color: "blue" },
+  { label: "Generate Invoice", href: "/admin/sales-orders", icon: HiOutlineDocumentText, color: "blue" },
 ];
 
 export default function AdminDashboardPage() {
+  const [stats, setStats] = useState({
+    totalProducts: 0,
+    totalCustomers: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    lowStockItems: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    const user = getStoredUser();
+    if (!user?.id) return;
+    const headers = getAuthHeaders();
+    Promise.all([
+      fetch(getApiUrl("products"), { headers }).then((r) => (r.ok ? r.json() : [])),
+      fetch(getApiUrl("customers"), { headers }).then((r) => (r.ok ? r.json() : [])),
+      fetch(getApiUrl("sales-orders"), { headers }).then((r) => (r.ok ? r.json() : [])),
+    ])
+      .then(([products, customers, salesOrders]) => {
+        const productsList = Array.isArray(products) ? products : [];
+        const customersList = Array.isArray(customers) ? customers : [];
+        const ordersList = Array.isArray(salesOrders) ? salesOrders : [];
+        const revenue = ordersList.reduce(
+          (sum, o) => sum + (Number(o.totalAmount) || 0),
+          0
+        );
+        const lowStock = productsList.filter(
+          (p) => p.reorderPoint != null && (p.stockLevel ?? 0) <= p.reorderPoint
+        ).length;
+        setStats({
+          totalProducts: productsList.length,
+          totalCustomers: customersList.length,
+          totalOrders: ordersList.length,
+          totalRevenue: revenue,
+          lowStockItems: lowStock,
+        });
+      })
+      .catch(() => {
+        setStats({ totalProducts: 0, totalCustomers: 0, totalOrders: 0, totalRevenue: 0, lowStockItems: 0 });
+      })
+      .finally(() => setStatsLoading(false));
+  }, []);
+
   return (
     <div className="w-full">
       <div>
@@ -59,28 +103,39 @@ export default function AdminDashboardPage() {
               </Link>
             ))}
           </div>
+          <p className="mt-2 text-sm text-stone-500">
+            Create sales order → open it → Fulfill (sell items) → then Generate invoice from that order page.
+          </p>
         </div>
 
         <div>
           <h3 className="text-xl font-semibold text-stone-900 mb-6">Top Stats</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
-            {stats.map(({ label, value, icon: Icon, color }) => (
-              <div
-                key={label}
-                className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm hover:shadow transition-shadow"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-stone-500">{label}</p>
-                    <p className="mt-1 text-2xl font-semibold text-stone-900">{value}</p>
+          {statsLoading ? (
+            <p className="text-stone-500">Loading stats...</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+              {statsConfig.map(({ key, label, icon: Icon, color, format }) => {
+                const raw = stats[key] ?? 0;
+                const value = format === "currency" ? `$${Number(raw).toFixed(2)}` : String(raw);
+                return (
+                  <div
+                    key={key}
+                    className="bg-white border border-stone-200 rounded-xl p-5 shadow-sm hover:shadow transition-shadow"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-stone-500">{label}</p>
+                        <p className="mt-1 text-2xl font-semibold text-stone-900">{value}</p>
+                      </div>
+                      <div className={`p-2.5 rounded-lg ${colorClasses[color]}`}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                    </div>
                   </div>
-                  <div className={`p-2.5 rounded-lg ${colorClasses[color]}`}>
-                    <Icon className="w-6 h-6" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SalesChart />

@@ -11,7 +11,7 @@ const statusBadge = (status) => {
   return <span className={`px-2 py-0.5 rounded text-xs font-medium ${c}`}>{status}</span>;
 };
 
-export default function UserInvoicesPage() {
+export default function AdminInvoicesPage() {
   const router = useRouter();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,9 @@ export default function UserInvoicesPage() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-stone-900 mb-6">Invoices</h1>
-      <p className="text-sm text-stone-500 mb-4">Generate invoices from fulfilled sales orders (on the sales order detail page).</p>
+      <p className="text-sm text-stone-500 mb-4">
+        Generate invoices from fulfilled sales orders: open a sales order → click &quot;Generate invoice&quot; on its detail page.
+      </p>
       {err && <p className="text-sm text-red-600 mb-4">{err}</p>}
       <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
         <table className="w-full text-left text-sm">
@@ -77,7 +79,7 @@ export default function UserInvoicesPage() {
                   <td className="px-4 py-3">{statusBadge(inv.status)}</td>
                   <td className="px-4 py-3">
                     <Link
-                      href={`/dashboard/invoices/${inv.id}`}
+                      href={`/admin/invoices/${inv.id}`}
                       className="inline-flex items-center gap-1.5 text-teal-600 hover:text-teal-700 font-medium"
                     >
                       <HiOutlineEye className="w-4 h-4" />

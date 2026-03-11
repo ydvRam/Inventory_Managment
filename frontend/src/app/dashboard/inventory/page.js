@@ -6,7 +6,7 @@ import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 
 export default function UserInventoryPage() {
   const router = useRouter();
-  const [products, setProducts] = useState([]);
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
@@ -16,15 +16,15 @@ export default function UserInventoryPage() {
       router.replace("/login");
       return;
     }
-    fetch(getApiUrl("products"), { headers: getAuthHeaders() })
+    fetch(getApiUrl("inventory"), { headers: getAuthHeaders() })
       .then((res) => {
         if (res.status === 401 || res.status === 403) {
-          setErr("Unable to load inventory. You may not have permission.");
+          router.replace("/login");
           return [];
         }
         return res.json();
       })
-      .then((data) => setProducts(Array.isArray(data) ? data : []))
+      .then((data) => setRows(Array.isArray(data) ? data : []))
       .catch(() => setErr("Failed to load inventory"))
       .finally(() => setLoading(false));
   }, [router]);
@@ -36,7 +36,7 @@ export default function UserInventoryPage() {
   return (
     <div>
       <h1 className="text-xl font-semibold text-stone-900 mb-6">Inventory</h1>
-      <p className="text-sm text-stone-500 mb-4">View only. Stock levels across products.</p>
+      <p className="text-sm text-stone-500 mb-4">Stock levels by product. Updated when purchase orders are received and when sales orders are fulfilled.</p>
       {err && <p className="text-sm text-red-600 mb-4">{err}</p>}
       <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
         <table className="w-full text-left text-sm">
@@ -44,37 +44,28 @@ export default function UserInventoryPage() {
             <tr>
               <th className="px-4 py-3 font-medium text-stone-700">Product</th>
               <th className="px-4 py-3 font-medium text-stone-700">SKU</th>
-              <th className="px-4 py-3 font-medium text-stone-700">Stock</th>
-              <th className="px-4 py-3 font-medium text-stone-700">Reorder at</th>
-              <th className="px-4 py-3 font-medium text-stone-700">Status</th>
+              <th className="px-4 py-3 font-medium text-stone-700">Quantity</th>
+              <th className="px-4 py-3 font-medium text-stone-700">Expiry</th>
             </tr>
           </thead>
           <tbody>
-            {products.length === 0 ? (
+            {rows.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-stone-500">
-                  No inventory to display.
+                <td colSpan={4} className="px-4 py-8 text-center text-stone-500">
+                  No inventory records yet.
                 </td>
               </tr>
             ) : (
-              products.map((p) => {
-                const lowStock = p.reorderPoint != null && p.stockLevel <= p.reorderPoint;
-                return (
-                  <tr key={p.id} className="border-b border-stone-100 hover:bg-stone-50/50">
-                    <td className="px-4 py-3 text-stone-900">{p.name}</td>
-                    <td className="px-4 py-3 text-stone-600">{p.sku}</td>
-                    <td className="px-4 py-3">{p.stockLevel}</td>
-                    <td className="px-4 py-3">{p.reorderPoint ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      {lowStock ? (
-                        <span className="text-amber-600 font-medium">Low stock</span>
-                      ) : (
-                        <span className="text-stone-500">In stock</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
+              rows.map((row) => (
+                <tr key={row.id} className="border-b border-stone-100 hover:bg-stone-50/50">
+                  <td className="px-4 py-3 text-stone-900">{row.product?.name ?? "—"}</td>
+                  <td className="px-4 py-3 text-stone-600">{row.product?.sku ?? "—"}</td>
+                  <td className="px-4 py-3 font-medium text-stone-900">{row.quantity ?? 0}</td>
+                  <td className="px-4 py-3 text-stone-600">
+                    {row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : "—"}
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>

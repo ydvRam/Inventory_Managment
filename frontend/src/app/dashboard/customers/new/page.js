@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 
-export default function AdminNewSupplierPage() {
+export default function UserNewCustomerPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,7 +26,7 @@ export default function AdminNewSupplierPage() {
     setErr("");
     setLoading(true);
     try {
-      const res = await fetch(getApiUrl("suppliers"), {
+      const res = await fetch(getApiUrl("customers"), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
@@ -39,9 +39,9 @@ export default function AdminNewSupplierPage() {
       const data = await res.json();
       if (res.status === 401 || res.status === 403) router.replace("/login");
       else if (!res.ok) throw new Error(data.message || "Failed to create");
-      else router.push("/admin/suppliers");
+      else router.push("/dashboard/customers");
     } catch (e) {
-      setErr(e.message || "Failed to create supplier");
+      setErr(e.message || "Failed to create customer");
     } finally {
       setLoading(false);
     }
@@ -50,8 +50,8 @@ export default function AdminNewSupplierPage() {
   return (
     <div className="flex w-full gap-6 items-stretch justify-evenly">
       <div className="w-[40%] shrink-0">
-        <h1 className="text-xl font-semibold text-stone-900 mb-6">Add supplier</h1>
-        <form onSubmit={onSubmit} className="space-y-4 max-w-md">
+        <h1 className="text-xl font-semibold text-stone-900 mb-6">Create customer</h1>
+        <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1.5">Name</label>
             <input
@@ -96,9 +96,9 @@ export default function AdminNewSupplierPage() {
               disabled={loading}
               className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
             >
-              {loading ? "Saving..." : "Create supplier"}
+              {loading ? "Saving..." : "Create customer"}
             </button>
-            <Link href="/admin/suppliers" className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50">
+            <Link href="/dashboard/customers" className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50">
               Cancel
             </Link>
           </div>
@@ -106,7 +106,7 @@ export default function AdminNewSupplierPage() {
       </div>
       <div className="w-[40%] shrink-0 rounded-lg overflow-hidden flex">
         <img
-          src="/img/supply.png"
+          src="/img/customer.png"
           alt=""
           className="w-full h-full object-cover min-h-0"
         />

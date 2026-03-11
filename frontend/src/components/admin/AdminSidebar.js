@@ -8,6 +8,8 @@ import {
   HiOutlineUserCircle,
   HiOutlineTruck,
   HiOutlineShoppingBag,
+  HiOutlineShoppingCart,
+  HiOutlineDocumentText,
   HiOutlineArchiveBox,
 } from "react-icons/hi2";
 
@@ -16,6 +18,8 @@ const links = [
   { href: "/admin/products", label: "Products", icon: HiOutlineCube },
   { href: "/admin/suppliers", label: "Suppliers", icon: HiOutlineTruck },
   { href: "/admin/purchase-orders", label: "Purchase Orders", icon: HiOutlineShoppingBag },
+  { href: "/admin/sales-orders", label: "Sales Orders", icon: HiOutlineShoppingCart },
+  { href: "/admin/invoices", label: "Invoices", icon: HiOutlineDocumentText },
   { href: "/admin/inventory", label: "Inventory", icon: HiOutlineArchiveBox },
   { href: "/user", label: "Profile", icon: HiOutlineUserCircle },
 ];
@@ -32,13 +36,19 @@ export default function AdminSidebar() {
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-teal-50 text-teal-700"
+                  ? "bg-teal-100 text-teal-800 border-l-2 border-teal-500 pl-[10px]"
                   : "text-stone-600 hover:bg-stone-100 hover:text-stone-900"
               }`}
             >
-              <Icon className="w-5 h-5 shrink-0" />
+              <span
+                className={`inline-flex items-center justify-center w-9 h-8 rounded-md shrink-0 transition-colors ${
+                  isActive ? "bg-teal-300 text-teal-800" : "bg-stone-200 text-stone-600 group-hover:bg-stone-300"
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+              </span>
               {label}
             </Link>
           );

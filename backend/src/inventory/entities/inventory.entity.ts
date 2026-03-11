@@ -24,6 +24,9 @@ export class Inventory {
   @Column({ type: 'int', default: 0 })
   quantity: number;
 
+  @Column({ type: 'date', nullable: true })
+  expiryDate: Date | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

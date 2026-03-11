@@ -1,15 +1,9 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-
-// Placeholder data – replace with API calls later
-const recentOrders = [
-  { id: "ORD-001", customer: "John Doe", amount: 249.99, status: "Completed", date: "2025-03-10" },
-  { id: "ORD-002", customer: "Jane Smith", amount: 89.50, status: "Pending", date: "2025-03-09" },
-  { id: "ORD-003", customer: "Bob Wilson", amount: 156.00, status: "Completed", date: "2025-03-09" },
-  { id: "ORD-004", customer: "Alice Brown", amount: 320.00, status: "Shipped", date: "2025-03-08" },
-  { id: "ORD-005", customer: "Charlie Lee", amount: 45.99, status: "Pending", date: "2025-03-08" },
-];
+import { HiOutlineEye } from "react-icons/hi2";
+import { getApiUrl, getAuthHeaders } from "@/lib/auth";
 
 const lowStockProducts = [
   { id: "1", name: "Widget A", sku: "WDG-001", stock: 3, reorderAt: 10 },
@@ -25,10 +19,12 @@ const recentPayments = [
   { id: "PAY-104", orderId: "ORD-002", amount: 89.50, method: "Cash", date: "2025-03-08 16:45" },
 ];
 
-const statusClass = {
-  Completed: "bg-emerald-100 text-emerald-800",
-  Pending: "bg-amber-100 text-amber-800",
+const orderStatusClass = {
+  Delivered: "bg-emerald-100 text-emerald-800",
+  Confirmed: "bg-blue-100 text-blue-800",
   Shipped: "bg-blue-100 text-blue-800",
+  Pending: "bg-amber-100 text-amber-800",
+  Cancelled: "bg-red-100 text-red-800",
 };
 
 function TableCard({ title, children, viewAllHref }) {
@@ -51,39 +47,70 @@ function TableCard({ title, children, viewAllHref }) {
 }
 
 export function RecentOrdersTable() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(getApiUrl("sales-orders"), { headers: getAuthHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        const sorted = [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        setOrders(sorted.slice(0, 10));
+      })
+      .catch(() => setOrders([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
-    <TableCard title="Recent Orders" viewAllHref="#">
+    <TableCard title="Recent Orders" viewAllHref="/admin/sales-orders">
       <table className="w-full text-left text-sm">
         <thead className="bg-stone-50 border-b border-stone-200">
           <tr>
-            <th className="px-4 py-2.5 font-medium text-stone-600">Order ID</th>
             <th className="px-4 py-2.5 font-medium text-stone-600">Customer</th>
             <th className="px-4 py-2.5 font-medium text-stone-600">Amount</th>
             <th className="px-4 py-2.5 font-medium text-stone-600">Status</th>
             <th className="px-4 py-2.5 font-medium text-stone-600">Date</th>
+            <th className="px-4 py-2.5 font-medium text-stone-600 w-16">Action</th>
           </tr>
         </thead>
         <tbody>
-          {recentOrders.length === 0 ? (
+          {loading ? (
+            <tr>
+              <td colSpan={5} className="px-4 py-6 text-center text-stone-500">
+                Loading...
+              </td>
+            </tr>
+          ) : orders.length === 0 ? (
             <tr>
               <td colSpan={5} className="px-4 py-6 text-center text-stone-500">
                 No recent orders.
               </td>
             </tr>
           ) : (
-            recentOrders.map((row) => (
+            orders.map((row) => (
               <tr key={row.id} className="border-b border-stone-100 hover:bg-stone-50/50">
-                <td className="px-4 py-2.5 font-medium text-stone-900">{row.id}</td>
-                <td className="px-4 py-2.5 text-stone-600">{row.customer}</td>
-                <td className="px-4 py-2.5 text-stone-600">${row.amount.toFixed(2)}</td>
+                <td className="px-4 py-2.5 font-medium text-stone-900">{row.customer?.name ?? "—"}</td>
+                <td className="px-4 py-2.5 text-stone-600">${Number(row.totalAmount || 0).toFixed(2)}</td>
                 <td className="px-4 py-2.5">
                   <span
-                    className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${statusClass[row.status] || "bg-stone-100 text-stone-700"}`}
+                    className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${orderStatusClass[row.status] || "bg-stone-100 text-stone-700"}`}
                   >
                     {row.status}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 text-stone-500">{row.date}</td>
+                <td className="px-4 py-2.5 text-stone-500">
+                  {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "—"}
+                </td>
+                <td className="px-4 py-2.5">
+                  <Link
+                    href={`/admin/sales-orders/${row.id}`}
+                    className="text-teal-600 hover:text-teal-700 inline-flex items-center gap-1"
+                    title="View"
+                  >
+                    <HiOutlineEye className="w-4 h-4" />
+                  </Link>
+                </td>
               </tr>
             ))
           )}

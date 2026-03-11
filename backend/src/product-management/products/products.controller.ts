@@ -15,7 +15,7 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../../auth/guards/admin.guard';
 
 @Controller('products')
-@UseGuards(JwtAuthGuard, AdminGuard)
+@UseGuards(JwtAuthGuard)
 export class ProductsController {
   constructor(private readonly service: ProductsService) {}
 
@@ -30,11 +30,13 @@ export class ProductsController {
   }
 
   @Post()
+  @UseGuards(AdminGuard)
   create(@Body() body: Partial<{ name: string; description: string; sku: string; categoryId: string; stockLevel: number; reorderPoint: number }>) {
     return this.service.create(body);
   }
 
   @Put(':id')
+  @UseGuards(AdminGuard)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: Partial<{ name: string; description: string; sku: string; categoryId: string; stockLevel: number; reorderPoint: number }>,
@@ -43,6 +45,7 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @UseGuards(AdminGuard)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.remove(id);
   }

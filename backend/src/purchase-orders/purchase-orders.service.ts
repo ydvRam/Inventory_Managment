@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { PurchaseOrder, PurchaseOrderStatus, PaymentStatus } from './entities/purchase-order.entity';
 import { PurchaseOrderItem } from './entities/purchase-order-item.entity';
 import { InventoryService } from '../inventory/inventory.service';
+import { MovementType } from '../inventory/entities/inventory-movement.entity';
 
 export interface CreatePurchaseOrderDto {
   supplierId: string;
@@ -86,10 +87,11 @@ export class PurchaseOrdersService {
     if (po.status === PurchaseOrderStatus.CANCELLED)
       throw new BadRequestException('Cannot receive a cancelled order');
     for (const item of po.items) {
-      await this.inventoryService.addQuantity(
-        item.productId,
-        item.quantity,
-      );
+      await this.inventoryService.addQuantity(item.productId, item.quantity, {
+        type: MovementType.PURCHASE_RECEIPT,
+        referenceType: 'purchase_order',
+        referenceId: po.id,
+      });
     }
     po.status = PurchaseOrderStatus.RECEIVED;
     await this.poRepo.save(po);

@@ -6,11 +6,11 @@ import Link from "next/link";
 import { HiOutlinePlus, HiOutlineTrash } from "react-icons/hi2";
 import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 
-export default function AdminNewPurchaseOrderPage() {
+export default function UserNewSalesOrderPage() {
   const router = useRouter();
-  const [suppliers, setSuppliers] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
-  const [supplierId, setSupplierId] = useState("");
+  const [customerId, setCustomerId] = useState("");
   const [items, setItems] = useState([{ productId: "", quantity: 1, unitPrice: "0" }]);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,10 +22,10 @@ export default function AdminNewPurchaseOrderPage() {
     }
     const h = getAuthHeaders();
     Promise.all([
-      fetch(getApiUrl("suppliers"), { headers: h }).then((r) => (r.ok ? r.json() : [])),
+      fetch(getApiUrl("customers"), { headers: h }).then((r) => (r.ok ? r.json() : [])),
       fetch(getApiUrl("products"), { headers: h }).then((r) => (r.ok ? r.json() : [])),
-    ]).then(([s, p]) => {
-      setSuppliers(Array.isArray(s) ? s : []);
+    ]).then(([c, p]) => {
+      setCustomers(Array.isArray(c) ? c : []);
       setProducts(Array.isArray(p) ? p : []);
     });
   }, [router]);
@@ -55,8 +55,8 @@ export default function AdminNewPurchaseOrderPage() {
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
-    if (!supplierId) {
-      setErr("Select a supplier");
+    if (!customerId) {
+      setErr("Select a customer");
       return;
     }
     const validItems = items
@@ -72,17 +72,17 @@ export default function AdminNewPurchaseOrderPage() {
     }
     setLoading(true);
     try {
-      const res = await fetch(getApiUrl("purchase-orders"), {
+      const res = await fetch(getApiUrl("sales-orders"), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ supplierId, items: validItems }),
+        body: JSON.stringify({ customerId, items: validItems }),
       });
       const data = await res.json();
       if (res.status === 401 || res.status === 403) router.replace("/login");
       else if (!res.ok) throw new Error(data.message || "Failed to create");
-      else router.push("/admin/purchase-orders");
+      else router.push("/dashboard/sales-orders");
     } catch (e) {
-      setErr(e.message || "Failed to create purchase order");
+      setErr(e.message || "Failed to create sales order");
     } finally {
       setLoading(false);
     }
@@ -91,19 +91,19 @@ export default function AdminNewPurchaseOrderPage() {
   return (
     <div className="flex w-full gap-6 items-stretch justify-evenly">
       <div className="w-[40%] shrink-0">
-        <h1 className="text-xl font-semibold text-stone-900 mb-6">Create purchase order</h1>
-        <form onSubmit={onSubmit} className="space-y-6 max-w-2xl">
+        <h1 className="text-xl font-semibold text-stone-900 mb-6">Create sales order</h1>
+        <form onSubmit={onSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-1.5">Supplier</label>
+            <label className="block text-sm font-medium text-stone-700 mb-1.5">Customer</label>
             <select
-              value={supplierId}
-              onChange={(e) => setSupplierId(e.target.value)}
+              value={customerId}
+              onChange={(e) => setCustomerId(e.target.value)}
               required
               className="w-full px-3.5 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white cursor-pointer"
             >
-              <option value="">Select supplier</option>
-              {suppliers.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
+              <option value="">Select customer</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
           </div>
@@ -188,9 +188,9 @@ export default function AdminNewPurchaseOrderPage() {
               disabled={loading}
               className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
             >
-              {loading ? "Creating..." : "Create purchase order"}
+              {loading ? "Creating..." : "Create sales order"}
             </button>
-            <Link href="/admin/purchase-orders" className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50">
+            <Link href="/dashboard/sales-orders" className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50">
               Cancel
             </Link>
           </div>
@@ -198,7 +198,7 @@ export default function AdminNewPurchaseOrderPage() {
       </div>
       <div className="w-[40%] shrink-0 rounded-lg overflow-hidden flex">
         <img
-          src="/img/purchase.png"
+          src="/img/order.png"
           alt=""
           className="w-full h-full object-cover min-h-0"
         />

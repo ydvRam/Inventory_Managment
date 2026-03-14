@@ -4,19 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { HiOutlineEye } from "react-icons/hi2";
 import { getApiUrl, getAuthHeaders } from "@/lib/auth";
+import { format } from 'date-fns';
 
 const lowStockProducts = [
   { id: "1", name: "Widget A", sku: "WDG-001", stock: 3, reorderAt: 10 },
   { id: "2", name: "Gadget B", sku: "GDG-002", stock: 5, reorderAt: 15 },
   { id: "3", name: "Part C", sku: "PRT-003", stock: 1, reorderAt: 5 },
   { id: "4", name: "Tool D", sku: "TOL-004", stock: 2, reorderAt: 8 },
-];
-
-const recentPayments = [
-  { id: "PAY-101", orderId: "ORD-001", amount: 249.99, method: "Card", date: "2025-03-10 14:32" },
-  { id: "PAY-102", orderId: "ORD-003", amount: 156.00, method: "Bank", date: "2025-03-09 11:20" },
-  { id: "PAY-103", orderId: "ORD-004", amount: 320.00, method: "Card", date: "2025-03-08 09:15" },
-  { id: "PAY-104", orderId: "ORD-002", amount: 89.50, method: "Cash", date: "2025-03-08 16:45" },
 ];
 
 const orderStatusClass = {
@@ -168,34 +162,128 @@ export function LowStockProductsTable() {
   );
 }
 
-export function RecentPaymentsTable() {
+export function ExpiringSoonTable() {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(getApiUrl("inventory/expiring?withinDays=7"), { headers: getAuthHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setRows(Array.isArray(data) ? data : []))
+      .catch(() => setRows([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isExpired = (expiryDate) => {
+    if (!expiryDate) return false;
+    const d = new Date(expiryDate);
+    d.setHours(0, 0, 0, 0);
+    return d < today;
+  };
+
   return (
-    <TableCard title="Recent Payments" viewAllHref="#">
+    <TableCard title="Expiring / Expired (7 days)" viewAllHref="/admin/inventory">
       <table className="w-full text-left text-sm">
         <thead className="bg-stone-50 border-b border-stone-200">
           <tr>
-            <th className="px-4 py-2.5 font-medium text-stone-600">Payment ID</th>
-            <th className="px-4 py-2.5 font-medium text-stone-600">Order</th>
+            <th className="px-4 py-2.5 font-medium text-stone-600">Product</th>
+            <th className="px-4 py-2.5 font-medium text-stone-600">SKU</th>
+            <th className="px-4 py-2.5 font-medium text-stone-600">Qty</th>
+            <th className="px-4 py-2.5 font-medium text-stone-600">Expiry</th>
+            <th className="px-4 py-2.5 font-medium text-stone-600">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {loading ? (
+            <tr>
+              <td colSpan={5} className="px-4 py-6 text-center text-stone-500">
+                Loading...
+              </td>
+            </tr>
+          ) : rows.length === 0 ? (
+            <tr>
+              <td colSpan={5} className="px-4 py-6 text-center text-stone-500">
+                No expiring or expired inventory in the next 7 days.
+              </td>
+            </tr>
+          ) : (
+            rows.map((row) => {
+              const expired = isExpired(row.expiryDate);
+              return (
+                <tr key={row.id} className="border-b border-stone-100 hover:bg-stone-50/50">
+                  <td className="px-4 py-2.5 font-medium text-stone-900">{row.product?.name ?? "—"}</td>
+                  <td className="px-4 py-2.5 text-stone-600">{row.product?.sku ?? "—"}</td>
+                  <td className="px-4 py-2.5 text-stone-600">{row.quantity ?? 0}</td>
+                  <td className="px-4 py-2.5 text-stone-600">
+                    {row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : "—"}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <span
+                      className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                        expired ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {expired ? "Expired" : "Expiring soon"}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </TableCard>
+  );
+}
+
+export function RecentPaymentsTable() {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(getApiUrl("invoices/recent-payments?limit=10"), { headers: getAuthHeaders() })
+      .then((res) => {
+        if (!res.ok) return [];
+        return res.json();
+      })
+      .then((data) => setPayments(Array.isArray(data) ? data : []))
+      .catch(() => setPayments([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <TableCard title="Recent Payments" viewAllHref="/admin/invoices">
+      <table className="w-full text-left text-sm">
+        <thead className="bg-stone-50 border-b border-stone-200">
+          <tr>
+            <th className="px-4 py-2.5 font-medium text-stone-600">Invoice</th>
             <th className="px-4 py-2.5 font-medium text-stone-600">Amount</th>
             <th className="px-4 py-2.5 font-medium text-stone-600">Method</th>
             <th className="px-4 py-2.5 font-medium text-stone-600">Date</th>
           </tr>
         </thead>
         <tbody>
-          {recentPayments.length === 0 ? (
+          {loading ? (
             <tr>
-              <td colSpan={5} className="px-4 py-6 text-center text-stone-500">
+              <td colSpan={4} className="px-4 py-6 text-center text-stone-500">
+                Loading...
+              </td>
+            </tr>
+          ) : payments.length === 0 ? (
+            <tr>
+              <td colSpan={4} className="px-4 py-6 text-center text-stone-500">
                 No recent payments.
               </td>
             </tr>
           ) : (
-            recentPayments.map((row) => (
+            payments.map((row) => (
               <tr key={row.id} className="border-b border-stone-100 hover:bg-stone-50/50">
-                <td className="px-4 py-2.5 font-medium text-stone-900">{row.id}</td>
-                <td className="px-4 py-2.5 text-stone-600">{row.orderId}</td>
-                <td className="px-4 py-2.5 text-stone-600">${row.amount.toFixed(2)}</td>
-                <td className="px-4 py-2.5 text-stone-500">{row.method}</td>
-                <td className="px-4 py-2.5 text-stone-500">{row.date}</td>
+                <td className="px-4 py-2.5 font-medium text-stone-900">{row.invoice?.invoiceNumber ?? row.invoiceId ?? "—"}</td>
+                <td className="px-4 py-2.5 text-stone-600">${Number(row.amount || 0).toFixed(2)}</td>
+                <td className="px-4 py-2.5 text-stone-600">{row.method ?? "—"}</td>
+                <td className="px-4 py-2.5 text-stone-500">{row.paidAt ? format(new Date(row.paidAt), "dd/MM/yyyy HH:mm") : "—"}</td>
               </tr>
             ))
           )}

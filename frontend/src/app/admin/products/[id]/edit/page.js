@@ -16,6 +16,8 @@ export default function AdminEditProductPage() {
   const [categoryId, setCategoryId] = useState("");
   const [stockLevel, setStockLevel] = useState(0);
   const [reorderPoint, setReorderPoint] = useState(0);
+  const [sellingPrice, setSellingPrice] = useState("");
+  const [costPrice, setCostPrice] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingProduct, setLoadingProduct] = useState(true);
@@ -42,6 +44,8 @@ export default function AdminEditProductPage() {
           setCategoryId(product.categoryId ?? "");
           setStockLevel(product.stockLevel ?? 0);
           setReorderPoint(product.reorderPoint ?? 0);
+          setSellingPrice(product.sellingPrice != null ? String(product.sellingPrice) : "");
+          setCostPrice(product.costPrice != null ? String(product.costPrice) : "");
         }
       })
       .catch(() => setErr("Failed to load"))
@@ -67,6 +71,8 @@ export default function AdminEditProductPage() {
           categoryId,
           stockLevel: Number(stockLevel) || 0,
           reorderPoint: Number(reorderPoint) || 0,
+          sellingPrice: sellingPrice === "" ? null : Number(sellingPrice),
+          costPrice: costPrice === "" ? null : Number(costPrice),
         }),
       });
       const data = await res.json();
@@ -130,6 +136,32 @@ export default function AdminEditProductPage() {
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1.5">Selling price</label>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={sellingPrice}
+              onChange={(e) => setSellingPrice(e.target.value)}
+              placeholder="0.00"
+              className="w-full px-3.5 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1.5">Cost price</label>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={costPrice}
+              onChange={(e) => setCostPrice(e.target.value)}
+              placeholder="0.00"
+              className="w-full px-3.5 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
+            />
+          </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>

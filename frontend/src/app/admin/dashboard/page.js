@@ -14,7 +14,7 @@ import {
 } from "react-icons/hi2";
 import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 import { SalesChart, PurchaseVsSalesChart, MonthlyRevenueChart } from "@/components/admin/DashboardCharts";
-import { RecentOrdersTable, LowStockProductsTable, RecentPaymentsTable } from "@/components/admin/DashboardTables";
+import { RecentOrdersTable, LowStockProductsTable, RecentPaymentsTable, ExpiringSoonTable } from "@/components/admin/DashboardTables";
 
 const statsConfig = [
   { key: "totalProducts", label: "Total Products", icon: HiOutlineCube, color: "teal", format: "number" },
@@ -48,6 +48,7 @@ export default function AdminDashboardPage() {
     lowStockItems: 0,
   });
   const [statsLoading, setStatsLoading] = useState(true);
+  const [chartData, setChartData] = useState({ salesOrders: [], purchaseOrders: [] });
 
   useEffect(() => {
     const user = getStoredUser();
@@ -57,11 +58,13 @@ export default function AdminDashboardPage() {
       fetch(getApiUrl("products"), { headers }).then((r) => (r.ok ? r.json() : [])),
       fetch(getApiUrl("customers"), { headers }).then((r) => (r.ok ? r.json() : [])),
       fetch(getApiUrl("sales-orders"), { headers }).then((r) => (r.ok ? r.json() : [])),
+      fetch(getApiUrl("purchase-orders"), { headers }).then((r) => (r.ok ? r.json() : [])),
     ])
-      .then(([products, customers, salesOrders]) => {
+      .then(([products, customers, salesOrders, purchaseOrders]) => {
         const productsList = Array.isArray(products) ? products : [];
         const customersList = Array.isArray(customers) ? customers : [];
         const ordersList = Array.isArray(salesOrders) ? salesOrders : [];
+        const purchaseList = Array.isArray(purchaseOrders) ? purchaseOrders : [];
         const revenue = ordersList.reduce(
           (sum, o) => sum + (Number(o.totalAmount) || 0),
           0
@@ -76,9 +79,11 @@ export default function AdminDashboardPage() {
           totalRevenue: revenue,
           lowStockItems: lowStock,
         });
+        setChartData({ salesOrders: ordersList, purchaseOrders: purchaseList });
       })
       .catch(() => {
         setStats({ totalProducts: 0, totalCustomers: 0, totalOrders: 0, totalRevenue: 0, lowStockItems: 0 });
+        setChartData({ salesOrders: [], purchaseOrders: [] });
       })
       .finally(() => setStatsLoading(false));
   }, []);
@@ -103,9 +108,9 @@ export default function AdminDashboardPage() {
               </Link>
             ))}
           </div>
-          <p className="mt-2 text-sm text-stone-500">
+          {/* <p className="mt-2 text-sm text-stone-500">
             Create sales order → open it → Fulfill (sell items) → then Generate invoice from that order page.
-          </p>
+          </p> */}
         </div>
 
         <div>
@@ -138,11 +143,11 @@ export default function AdminDashboardPage() {
           )}
         </div>
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SalesChart />
-          <MonthlyRevenueChart />
+          <SalesChart salesOrders={chartData.salesOrders} />
+          <MonthlyRevenueChart salesOrders={chartData.salesOrders} />
         </div>
         <div className="mt-6">
-          <PurchaseVsSalesChart />
+          <PurchaseVsSalesChart salesOrders={chartData.salesOrders} purchaseOrders={chartData.purchaseOrders} />
         </div>
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -153,8 +158,9 @@ export default function AdminDashboardPage() {
             <LowStockProductsTable />
           </div>
         </div>
-        <div className="mt-6">
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <RecentPaymentsTable />
+          <ExpiringSoonTable />
         </div>
       </div>
     </div>

@@ -26,8 +26,8 @@ export default function UserSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed top-14 left-0 bottom-0 z-40 w-56 bg-white border-r border-stone-200 flex flex-col">
-      <nav className="p-3 space-y-0.5">
+    <aside className="fixed top-14 left-0 bottom-0 z-40 w-56 bg-white-100 border-r border-stone-200 flex flex-col">
+      <nav className="p-3 space-y-1.5">
         {links.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
           return (

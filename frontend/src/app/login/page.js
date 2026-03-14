@@ -31,8 +31,9 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-stone-100 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(13,115,119,0.12),transparent),radial-gradient(ellipse_60%_40%_at_100%_100%,rgba(13,115,119,0.06),transparent)]">
-      <div className="w-full max-w-md p-8 bg-white rounded-2xl border border-stone-200 shadow-lg shadow-black/5">
+    <div className="min-h-screen flex items-center justify-center p-6 bg-stone-100 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(13,115,119,0.12),transparent),radial-gradient(ellipse_60%_40%_at_100%_100%,rgba(26, 91, 94, 0.06),transparent)]">
+      <div className="flex w-full max-w-4xl gap-8 items-stretch bg-white rounded-2xl justify-center flex-wrap sm:flex-nowrap p-6">
+      <div className="w-full max-w-md p-8 bg-white rounded-2xl shrink-0">
         <div className="flex justify-center mb-4">
           <div className="p-3 rounded-full bg-teal-100 text-teal-600">
             <HiOutlineArrowRightOnRectangle className="w-8 h-8" />
@@ -85,6 +86,10 @@ export default function LoginPage() {
         <p className="mt-6 pt-5 border-t border-stone-200 text-sm text-stone-500 text-center">
           No account? <Link href="/signup" className="font-medium text-teal-600 hover:text-teal-700 hover:underline">Sign up</Link>
         </p>
+      </div>
+      <div className="hidden sm:flex w-[40%] min-w-[400px] rounded-2xl overflow-hidden items-center justify-center p-4">
+        <img src="/img/Sign%20in-pana.png" alt="Sign in" className="w-full h-full object-contain" />
+      </div>
       </div>
     </div>
   );

@@ -61,8 +61,33 @@ export default function UserInventoryPage() {
                   <td className="px-4 py-3 text-stone-900">{row.product?.name ?? "—"}</td>
                   <td className="px-4 py-3 text-stone-600">{row.product?.sku ?? "—"}</td>
                   <td className="px-4 py-3 font-medium text-stone-900">{row.quantity ?? 0}</td>
-                  <td className="px-4 py-3 text-stone-600">
-                    {row.expiryDate ? new Date(row.expiryDate).toLocaleDateString() : "—"}
+                  <td className="px-4 py-3">
+                    {row.expiryDate ? (() => {
+                      const d = new Date(row.expiryDate);
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      d.setHours(0, 0, 0, 0);
+                      const expired = d < today;
+                      const in7 = (() => {
+                        const cut = new Date(today);
+                        cut.setDate(cut.getDate() + 7);
+                        return d >= today && d <= cut;
+                      })();
+                      const label = d.toLocaleDateString();
+                      return (
+                        <span
+                          className={
+                            expired
+                              ? "text-red-600 font-medium"
+                              : in7
+                                ? "text-amber-600 font-medium"
+                                : "text-stone-600"
+                          }
+                        >
+                          {label}{expired ? " (Expired)" : in7 ? " (Expiring soon)" : ""}
+                        </span>
+                      );
+                    })() : "—"}
                   </td>
                 </tr>
               ))

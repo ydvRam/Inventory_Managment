@@ -47,6 +47,19 @@ export default function AdminNewPurchaseOrderPage() {
     });
   }
 
+  // When user picks a product, fill unit price from product's cost price (or selling price if no cost)
+  function onSelectProduct(i, productId) {
+    const product = products.find((p) => p.id === productId);
+    const price = product
+      ? String(product.costPrice ?? product.sellingPrice ?? "0")
+      : "0";
+    setItems((prev) => {
+      const next = [...prev];
+      next[i] = { ...next[i], productId, unitPrice: price };
+      return next;
+    });
+  }
+
   const total = items.reduce(
     (sum, row) => sum + (Number(row.quantity) || 0) * (Number(row.unitPrice) || 0),
     0
@@ -135,7 +148,7 @@ export default function AdminNewPurchaseOrderPage() {
                       <td className="px-3 py-2">
                         <select
                           value={row.productId}
-                          onChange={(e) => updateLine(i, "productId", e.target.value)}
+                          onChange={(e) => onSelectProduct(i, e.target.value)}
                           className="w-full px-2.5 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white"
                         >
                           <option value="">Select product</option>

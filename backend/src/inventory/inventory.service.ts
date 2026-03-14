@@ -61,7 +61,7 @@ export class InventoryService {
     return inv;
   }
 
-  /** Deduct quantity (e.g. on sale). Throws if insufficient stock. */
+  /** Deduct quantity (e.g. on sale). Throws if insufficient stock or if product stock is expired. */
   async reduceQuantity(
     productId: string,
     quantity: number,
@@ -71,6 +71,18 @@ export class InventoryService {
     const current = inv ? Number(inv.quantity) : 0;
     if (current < quantity)
       throw new BadRequestException(`Insufficient stock for product. Available: ${current}`);
+
+    // Product expiry: do not allow selling if inventory has an expiry date in the past
+    if (inv?.expiryDate) {
+      const expiry = new Date(inv.expiryDate);
+      const today = new Date();
+      expiry.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+      if (expiry < today)
+        throw new BadRequestException(
+          `Cannot sell product: inventory has expired (expiry date: ${inv.expiryDate.toISOString().split('T')[0]}). Adjust or clear expiry.`,
+        );
+    }
     if (!inv) {
       inv = this.repo.create({ productId, quantity: 0 });
       inv = await this.repo.save(inv);
@@ -155,5 +167,22 @@ export class InventoryService {
     }
     inv.expiryDate = expiryDate;
     return this.repo.save(inv);
+  }
+
+  /**
+   * Find inventory with expiry in range.
+   * @param withinDays - If 0: only already expired. If >0: expired or expiring within that many days.
+   */
+  async findExpiring(withinDays = 0): Promise<Inventory[]> {
+    const cutoff = new Date();
+    cutoff.setHours(23, 59, 59, 999);
+    cutoff.setDate(cutoff.getDate() + withinDays);
+    return this.repo
+      .createQueryBuilder('inv')
+      .leftJoinAndSelect('inv.product', 'product')
+      .where('inv.expiryDate IS NOT NULL')
+      .andWhere('inv.expiryDate <= :cutoff', { cutoff })
+      .orderBy('inv.expiryDate', 'ASC')
+      .getMany();
   }
 }

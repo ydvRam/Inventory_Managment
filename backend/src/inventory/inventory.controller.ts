@@ -27,6 +27,12 @@ export class InventoryController {
     return this.service.findMovements(productId || undefined, limit ? parseInt(limit, 10) : 100);
   }
 
+  @Get('expiring')
+  findExpiring(@Query('withinDays') withinDays?: string) {
+    const days = withinDays != null ? parseInt(withinDays, 10) : 7;
+    return this.service.findExpiring(Number.isNaN(days) ? 7 : days);
+  }
+
   @Get('by-product/:productId')
   findByProduct(@Param('productId', ParseUUIDPipe) productId: string) {
     return this.service.findByProductId(productId);

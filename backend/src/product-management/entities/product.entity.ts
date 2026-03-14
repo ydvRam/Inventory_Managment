@@ -38,6 +38,14 @@ export class Product {
   @Column({ type: 'int', default: 0 })
   reorderPoint: number;
 
+  /** Default price when selling (used to pre-fill sales order lines). */
+  @Column({ type: 'decimal', precision: 14, scale: 2, nullable: true })
+  sellingPrice: string | null;
+
+  /** Default cost when buying (used to pre-fill purchase order lines). */
+  @Column({ type: 'decimal', precision: 14, scale: 2, nullable: true })
+  costPrice: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

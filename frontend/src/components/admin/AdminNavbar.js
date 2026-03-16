@@ -1,11 +1,13 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { HiOutlineSquares2X2, HiOutlineUserCircle, HiOutlineArrowRightOnRectangle, HiOutlineBell } from "react-icons/hi2";
+import { HiOutlineSquares2X2, HiOutlineUserCircle, HiOutlineArrowRightOnRectangle, HiOutlineBell, HiOutlineBars3 } from "react-icons/hi2";
 import { getStoredUser, clearAuth } from "@/lib/auth";
 
-export default function AdminNavbar() {
-  const user = getStoredUser();
+export default function AdminNavbar({ onMenuClick }) {
+  const [user, setUser] = useState(null);
+  useEffect(() => setUser(getStoredUser()), []);
 
   function logout() {
     clearAuth();
@@ -16,10 +18,19 @@ export default function AdminNavbar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 bg-white border-b border-stone-200">
-      <Link
-        href="/admin/dashboard"
-        className="group relative flex items-center gap-2.5 font-semibold text-stone-800"
-      >
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          className="md:hidden p-2 -ml-1 rounded-lg text-stone-600 hover:bg-stone-100 transition-colors"
+          aria-label="Open menu"
+        >
+          <HiOutlineBars3 className="w-6 h-6" />
+        </button>
+        <Link
+          href="/admin/dashboard"
+          className="hidden md:flex group relative flex items-center gap-2.5 font-semibold text-stone-800"
+        >
         <span className={iconBox}>
           <HiOutlineSquares2X2 className="w-5 h-5" />
         </span>
@@ -28,6 +39,7 @@ export default function AdminNavbar() {
           Dashboard
         </span>
       </Link>
+      </div>
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -55,7 +67,7 @@ export default function AdminNavbar() {
         </Link>
         <button
           onClick={logout}
-          className="group relative flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-100 text-sm text-stone-600"
+          className="group hidden md:flex relative flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-100 text-sm text-stone-600"
         >
           <span className={iconBox}>
             <HiOutlineArrowRightOnRectangle className="w-5 h-5" />

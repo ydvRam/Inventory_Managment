@@ -5,9 +5,10 @@ import { getStoredUser } from "@/lib/auth";
 
 export default function DashboardBanner() {
   const [dateLabel, setDateLabel] = useState("");
-  const user = getStoredUser();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
+    setUser(getStoredUser());
     const update = () =>
       setDateLabel(
         new Date().toLocaleDateString("en-US", {
@@ -29,7 +30,7 @@ export default function DashboardBanner() {
           Hello , {user?.name || user?.email || "User"}
         </p>
       </div>
-      <div className="shrink-0 relative w-140 min-w-[150px] min-h-[120px] rounded-lg overflow-hidden">
+      <div className="shrink-0 relative w-0 md:w-140 min-w-[150px] min-h-[120px] rounded-lg overflow-hidden">
         <img
           src="https://home.atlassian.com/assets/43d10b5060d456dcdf989f80838e2e8a.svg"
           alt=""

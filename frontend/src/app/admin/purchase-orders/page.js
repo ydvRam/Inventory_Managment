@@ -63,8 +63,8 @@ export default function AdminPurchaseOrdersPage() {
         </Link>
       </div>
       {err && <p className="text-sm text-red-600 mb-4">{err}</p>}
-      <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
-        <table className="w-full text-left text-sm">
+      <div className="bg-white border border-stone-200 rounded-xl overflow-x-auto">
+        <table className="w-full text-left text-sm min-w-[600px]">
           <thead className="bg-stone-50 border-b border-stone-200">
             <tr>
               <th className="px-4 py-3 font-medium text-stone-700">Supplier</th>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   HiOutlineCube,
@@ -10,6 +11,8 @@ import {
   HiOutlineChartBar,
   HiOutlinePlusCircle,
   HiOutlineBanknotes,
+  HiOutlineBars3,
+  HiOutlineXMark,
 } from "react-icons/hi2";
 
 const features = [
@@ -52,41 +55,93 @@ const howItWorks = [
   { step: 4, title: "Track Payments", text: "Monitor payments and order status.", icon: HiOutlineBanknotes },
 ];
 
+const navLinks = [
+  { href: "/login", label: "Features" },
+  { href: "/login", label: "Pricing" },
+  { href: "/login", label: "Login" },
+  { href: "/signup", label: "Sign up", primary: true },
+];
+
 export default function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  function closeMenu() {
+    setMenuOpen(false);
+  }
+
   return (
     <div className="min-h-screen bg-stone-100 text-stone-900">
       {/* Top bar */}
-      <header className=" backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <span className="text-lg font-semibold text-stone-900">Inventory</span>
-          <nav className="flex gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg hover:bg-stone-100 transition-colors"
-            >
-              Features
-            </Link>
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg hover:bg-stone-100 transition-colors"
-            >
-              Pricing
-            </Link>
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg hover:bg-stone-100 transition-colors"
-            >
-              Login
-            </Link>
-            <Link
-              href="/signup"
-              className="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors"
-            >
-              Sign up
-            </Link>
+      <header className="sticky top-0 z-20 bg-white/90 border-b border-stone-200 backdrop-blur-sm">
+        <div className="max-md px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="text-lg font-semibold text-stone-900">
+            Inventory
+          </Link>
+
+          {/* Desktop nav: visible from md (768px) up */}
+          <nav className="hidden md:flex gap-3">
+            {navLinks.map(({ href, label, primary }) => (
+              <Link
+                key={label}
+                href={href}
+                className={
+                  primary
+                    ? "px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 transition-colors"
+                    : "px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 rounded-lg hover:bg-stone-100 transition-colors"
+                }
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Hamburger: visible only on mobile (below md) */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            className="md:hidden p-2 rounded-lg text-stone-600 hover:bg-stone-100 hover:text-stone-900 transition-colors"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <HiOutlineXMark className="w-6 h-6" /> : <HiOutlineBars3 className="w-6 h-6" />}
+          </button>
+        </div>
+
+        {/* Mobile menu: slide-in drawer, visible only when menuOpen and on mobile */}
+        <div
+          className={`md:hidden absolute inset-x-0 top-full border-t border-stone-200 bg-white shadow-lg transition-all duration-200 ease-out ${
+            menuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+          }`}
+          aria-hidden={!menuOpen}
+        >
+          <nav className="flex flex-col px-4 py-4 gap-1">
+            {navLinks.map(({ href, label, primary }) => (
+              <Link
+                key={label}
+                href={href}
+                onClick={closeMenu}
+                className={
+                  primary
+                    ? "px-4 py-3 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 text-center transition-colors"
+                    : "px-4 py-3 text-sm font-medium text-stone-700 rounded-lg hover:bg-stone-100 transition-colors"
+                }
+              >
+                {label}
+              </Link>
+            ))}
           </nav>
         </div>
       </header>
+
+      {/* Overlay: dim background when menu open on mobile, click to close */}
+      {menuOpen && (
+        <button
+          type="button"
+          onClick={closeMenu}
+          className="md:hidden fixed inset-0 z-10 bg-black/30 top-14"
+          aria-label="Close menu"
+        />
+      )}
 
       {/* Hero */}
       <section className="max-w-5xl mx-auto px-4 py-16 sm:py-24 text-center">
@@ -172,7 +227,7 @@ export default function Home() {
           <p className="text-stone-600 mb-6">Start using our system today.</p>
           <Link
             href="/signup"
-            className="inline-block px-6 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors"
+            className="inline-block px-4 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors"
           >
             Create Free Account
           </Link>

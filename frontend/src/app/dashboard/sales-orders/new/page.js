@@ -89,8 +89,8 @@ export default function UserNewSalesOrderPage() {
   }
 
   return (
-    <div className="flex w-full gap-6 items-stretch justify-evenly">
-      <div className="w-[40%] shrink-0">
+    <div className="flex md:flex-row flex-col w-full gap-6 items-stretch justify-evenly">
+      <div className="md:w-[40%] shrink-0">
         <h1 className="text-xl font-semibold text-stone-900 mb-6">Create sales order</h1>
         <form onSubmit={onSubmit} className="space-y-6">
           <div>
@@ -196,7 +196,7 @@ export default function UserNewSalesOrderPage() {
           </div>
         </form>
       </div>
-      <div className="w-[40%] shrink-0 rounded-lg overflow-hidden flex">
+      <div className="md:w-[40%] shrink-0 rounded-lg overflow-hidden flex">
         <img
           src="/img/order.png"
           alt=""

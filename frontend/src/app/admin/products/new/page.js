@@ -64,10 +64,10 @@ export default function AdminNewProductPage() {
   }
 
   return (
-    <div className="flex w-full gap-6 items-stretch justify-evenly">
-      <div className="w-[40%] shrink-0">
+    <div className=" flex flex-col md:flex-row w-full gap-6 items-stretch justify-evenly">
+      <div className="md:w-[40%] shrink-0">
         <h1 className="text-xl font-semibold text-stone-900 mb-6">Add product</h1>
-        <form onSubmit={onSubmit} className="space-y-4 max-w-md">
+        <form onSubmit={onSubmit} className="space-y-2 max-w-full">
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-1.5">Name</label>
             <input
@@ -174,7 +174,7 @@ export default function AdminNewProductPage() {
           </div>
         </form>
       </div>
-      <div className="w-[40%] shrink-0 rounded-lg overflow-hidden flex">
+      <div className="md:w-[40%] shrink-0 rounded-lg overflow-hidden flex">
         <img
           src="/img/Product.png"
           alt=""

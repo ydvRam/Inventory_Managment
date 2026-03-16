@@ -52,7 +52,7 @@ export default function UserProductsPage() {
       <p className="text-sm text-stone-500 mb-4">View only. All products created by admin are listed below.</p>
       {err && <p className="text-sm text-red-600 mb-4">{err}</p>}
 
-      <div className="mb-6 flex items-center gap-3 p-4 bg-white border border-stone-200 rounded-xl shadow-sm max-w-xs">
+      <div className="mb-6 flex items-center gap-3 p-4 bg-white border border-stone-200 rounded-xl shadow-sm md:max-w-xs max-w-xl">
         <div className="p-2.5 rounded-lg bg-teal-50 text-teal-600">
           <HiOutlineCube className="w-6 h-6" />
         </div>
@@ -62,8 +62,8 @@ export default function UserProductsPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
-        <table className="w-full text-left text-sm">
+      <div className="bg-white border border-stone-200 rounded-xl overflow-x-auto">
+        <table className="w-full text-left text-sm min-w-[600px]">
           <thead className="bg-stone-50 border-b border-stone-200">
             <tr>
               <th className="px-4 py-3 font-medium text-stone-700">Name</th>

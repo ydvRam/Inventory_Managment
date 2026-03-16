@@ -5,11 +5,10 @@ import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: (origin, cb) => {
+    origin: (origin: string, cb: (arg0: null, arg1: boolean) => void) => {
       const allowed = [
         'http://localhost:3000',
-        'http://127.0.0.1:3000',
-        'http://172.22.64.1:3000',
+        'http://172.16.1.7:3000',
       ];
       if (process.env.CORS_ORIGIN) {
         allowed.push(...process.env.CORS_ORIGIN.split(','));

@@ -29,7 +29,10 @@ import { InvoicesModule } from './invoices/invoices.module';
         password: configService.get<string>('DB_PASSWORD', 'Yadav@7457'),
         database: configService.get<string>('DB_NAME', 'inventory_db'),
         autoLoadEntities: true,
-        synchronize: configService.get<string>('NODE_ENV') !== 'production',
+        // When SYNC_DB=true or not in production, TypeORM creates/updates tables. Set SYNC_DB=true once on fresh DB, then set SYNC_DB=false.
+        synchronize:
+          configService.get<string>('SYNC_DB') === 'true' ||
+          configService.get<string>('NODE_ENV') !== 'production',
       }),
       inject: [ConfigService],
     }),

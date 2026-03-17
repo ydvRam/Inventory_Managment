@@ -80,6 +80,19 @@ export class UsersService {
       user.roles = await this.roleRepository.findBy({
         id: In(dto.roleIds),
       });
+    } else if (dto.roleNames?.length) {
+      const roles: Role[] = [];
+      for (const name of dto.roleNames) {
+        const n = String(name).trim().toLowerCase();
+        if (!n) continue;
+        let role = await this.roleRepository.findOne({ where: { name: n } });
+        if (!role) {
+          role = this.roleRepository.create({ name: n });
+          role = await this.roleRepository.save(role);
+        }
+        roles.push(role);
+      }
+      user.roles = roles;
     } else {
       user.roles = [];
     }

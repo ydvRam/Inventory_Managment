@@ -45,7 +45,11 @@ export default function UserPage() {
         </div>
         <div>
           <dt className="text-zinc-500">Role(s)</dt>
-          <dd>{user.roles?.length ? user.roles.join(", ") : "No role assigned"}</dd>
+          <dd>
+            {user.roles?.length
+              ? user.roles.map((r) => (r ? r.charAt(0).toUpperCase() + r.slice(1).toLowerCase() : r)).join(", ")
+              : "No role assigned"}
+          </dd>
         </div>
       </dl>
       <div className="mt-6 flex flex-wrap gap-3">

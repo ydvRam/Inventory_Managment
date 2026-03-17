@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { HiOutlineUser, HiOutlineEnvelope, HiOutlineLockClosed, HiOutlineShieldCheck, HiOutlineUserPlus } from "react-icons/hi2";
@@ -11,21 +11,18 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [roleId, setRoleId] = useState("");
-  const [roles, setRoles] = useState([]);
+  const [roleName, setRoleName] = useState("");
   const [err, setErr] = useState("");
 
-  useEffect(() => {
-    fetch(getApiUrl("/roles"))
-      .then((res) => res.json())
-      .then((data) => setRoles(Array.isArray(data) ? data : []))
-      .catch(() => setRoles([]));
-  }, []);
+  const roleOptions = [
+    { value: "user", label: "User" },
+    { value: "admin", label: "Admin" },
+  ];
 
   async function onSubmit(e) {
     e.preventDefault();
     setErr("");
-    if (!roleId) {
+    if (!roleName) {
       setErr("Please select a role");
       return;
     }
@@ -33,7 +30,7 @@ export default function SignupPage() {
       const res = await fetch(getApiUrl("/users"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, roleIds: [roleId] }),
+        body: JSON.stringify({ name, email, password, roleNames: [roleName] }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Signup failed");
@@ -112,15 +109,15 @@ export default function SignupPage() {
                 <HiOutlineShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 pointer-events-none" />
                 <select
                   id="role"
-                  value={roleId}
-                  onChange={(e) => setRoleId(e.target.value)}
+                  value={roleName}
+                  onChange={(e) => setRoleName(e.target.value)}
                   required
                   className={inputClass + " cursor-pointer pl-10"}
                 >
                   <option value="">Select role</option>
-                  {roles.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
+                  {roleOptions.map((r) => (
+                    <option key={r.value} value={r.value}>
+                      {r.label}
                     </option>
                   ))}
                 </select>

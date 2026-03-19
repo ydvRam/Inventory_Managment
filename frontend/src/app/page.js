@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import SparkleNavbar from '@/components/lightswind/sparkle-navbar';
+import { BorderBeam } from '@/components/lightswind/border-beam';
 import {
   HiOutlineCube,
   HiOutlineArchiveBox,
@@ -56,11 +58,15 @@ const howItWorks = [
 ];
 
 const navLinks = [
-  { href: "/login", label: "Features" },
-  { href: "/login", label: "Pricing" },
+  { href: "#", label: "Features" },
+  { href: "#", label: "Pricing" },
   { href: "/login", label: "Login" },
   { href: "/signup", label: "Sign up", primary: true },
 ];
+<SparkleNavbar
+  items={navLinks}
+  color="#1E90FF"
+/>
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -72,15 +78,19 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-stone-100 text-stone-900">
       {/* Top bar */}
-      <header className="sticky top-0 z-20 bg-white/90 border-b border-stone-200 backdrop-blur-sm">
-        <div className="max-md px-4 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-20 bg-white/90 backdrop-blur-sm">
+        <div className="max-md px-10 py-2 flex items-center justify-between">
           <Link href="/" className="text-lg font-semibold text-stone-900">
             Inventory
           </Link>
 
           {/* Desktop nav: visible from md (768px) up */}
           <nav className="hidden md:flex gap-3">
-            {navLinks.map(({ href, label, primary }) => (
+            <SparkleNavbar
+              items={navLinks}
+              color="#1E90FF"
+            />
+            {/* {navLinks.map(({ href, label, primary }) => (
               <Link
                 key={label}
                 href={href}
@@ -92,7 +102,7 @@ export default function Home() {
               >
                 {label}
               </Link>
-            ))}
+            ))} */}
           </nav>
 
           {/* Hamburger: visible only on mobile (below md) */}
@@ -109,9 +119,8 @@ export default function Home() {
 
         {/* Mobile menu: slide-in drawer, visible only when menuOpen and on mobile */}
         <div
-          className={`md:hidden absolute inset-x-0 top-full border-t border-stone-200 bg-white shadow-lg transition-all duration-200 ease-out ${
-            menuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0 overflow-hidden"
-          }`}
+          className={`md:hidden absolute inset-x-0 top-full border-t border-stone-200 bg-white shadow-lg transition-all duration-200 ease-out ${menuOpen ? "max-h-80 opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+            }`}
           aria-hidden={!menuOpen}
         >
           <nav className="flex flex-col px-4 py-4 gap-1">
@@ -154,16 +163,42 @@ export default function Home() {
         <div className="flex flex-wrap gap-4 justify-center">
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors"
+            className="inline-block px-7 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors"
+            // inline-block px-6 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors
           >
             Login
           </Link>
-          <Link
+          {/* <BorderBeam
+            colorFrom="#7400ff"
+            colorTo="#9b41ff"
+            size={50}
+            duration={6}
+            borderThickness={2}
+            glowIntensity={3}
+          /> */}
+          {/* <Link
             href="/signup"
-            className="inline-flex items-center gap-2 px-6 py-3 border border-stone-300 bg-white font-medium rounded-lg hover:bg-stone-50 transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 border border-stone-300 bg-white font-medium rounded-lg hover:bg-stone-50 transition-colors "
           >
             Sign up
-          </Link>
+          </Link> */}
+          <div className="relative inline-block rounded-lg">
+            <BorderBeam
+              colorFrom="#009689"
+              colorTo="#009689"
+              size={50}
+              duration={6}
+              borderThickness={2}
+              glowIntensity={3}
+            />
+
+            <Link
+              href="/signup"
+              className="inline-flex items-center gap-2 px-6 py-3 border border-stone-300 bg-white font-medium rounded-lg hover:bg-stone-50 transition-colors "
+            >
+              Sign up
+            </Link>
+          </div>
         </div>
       </section>
 

@@ -6,12 +6,24 @@ import Link from "next/link";
 import { HiOutlinePlus, HiOutlineTrash } from "react-icons/hi2";
 import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 
+function buildItemsForApi(rows) {
+  return rows
+    .filter((r) => r.productId && (Number(r.quantity) || 0) > 0)
+    .map((r) => ({
+      productId: r.productId,
+      quantity: Number(r.quantity) || 0,
+      unitPrice: r.unitPrice ? String(Number(r.unitPrice) || 0) : undefined,
+    }));
+}
+
 export default function UserNewSalesOrderPage() {
   const router = useRouter();
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [customerId, setCustomerId] = useState("");
   const [items, setItems] = useState([{ productId: "", quantity: 1, unitPrice: "0" }]);
+  const [couponCode, setCouponCode] = useState("");
+  const [preview, setPreview] = useState(null);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,6 +42,24 @@ export default function UserNewSalesOrderPage() {
     });
   }, [router]);
 
+  useEffect(() => {
+    const payload = buildItemsForApi(items);
+    if (payload.length === 0) {
+      setPreview(null);
+      return undefined;
+    }
+    const t = setTimeout(() => {
+      fetch(getApiUrl("pricing/preview"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({ items: payload, couponCode: couponCode.trim() || undefined }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then(setPreview);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [items, couponCode]);
+
   function addLine() {
     setItems((prev) => [...prev, { productId: "", quantity: 1, unitPrice: "0" }]);
   }
@@ -47,10 +77,15 @@ export default function UserNewSalesOrderPage() {
     });
   }
 
-  const total = items.reduce(
-    (sum, row) => sum + (Number(row.quantity) || 0) * (Number(row.unitPrice) || 0),
-    0
-  );
+  function onSelectProduct(i, productId) {
+    const product = products.find((p) => p.id === productId);
+    const price = product && product.sellingPrice != null ? String(product.sellingPrice) : "0";
+    setItems((prev) => {
+      const next = [...prev];
+      next[i] = { ...next[i], productId, unitPrice: price };
+      return next;
+    });
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -59,13 +94,7 @@ export default function UserNewSalesOrderPage() {
       setErr("Select a customer");
       return;
     }
-    const validItems = items
-      .map((r) => ({
-        productId: r.productId,
-        quantity: Number(r.quantity) || 0,
-        unitPrice: String(Number(r.unitPrice) || 0),
-      }))
-      .filter((r) => r.productId && r.quantity > 0);
+    const validItems = buildItemsForApi(items);
     if (validItems.length === 0) {
       setErr("Add at least one product with quantity");
       return;
@@ -75,7 +104,11 @@ export default function UserNewSalesOrderPage() {
       const res = await fetch(getApiUrl("sales-orders"), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ customerId, items: validItems }),
+        body: JSON.stringify({
+          customerId,
+          items: validItems,
+          couponCode: couponCode.trim() || undefined,
+        }),
       });
       const data = await res.json();
       if (res.status === 401 || res.status === 403) router.replace("/login");
@@ -89,8 +122,8 @@ export default function UserNewSalesOrderPage() {
   }
 
   return (
-    <div className="flex md:flex-row flex-col w-full gap-6 items-stretch justify-evenly">
-      <div className="md:w-[40%] shrink-0">
+    <div className="flex md:flex-row flex-col w-full  gap-6 items-stretch justify-evenly ">
+      <div className="md:w-[40%] shrink-0 ">
         <h1 className="text-xl font-semibold text-stone-900 mb-6">Create sales order</h1>
         <form onSubmit={onSubmit} className="space-y-6">
           <div>
@@ -125,7 +158,7 @@ export default function UserNewSalesOrderPage() {
                   <tr>
                     <th className="px-3 py-2 text-left font-medium text-stone-700">Product</th>
                     <th className="px-3 py-2 text-left font-medium text-stone-700 w-24">Qty</th>
-                    <th className="px-3 py-2 text-left font-medium text-stone-700 w-28">Unit price</th>
+                    <th className="px-3 py-2 text-left font-medium text-stone-700 w-28">Base price*</th>
                     <th className="px-3 py-2 w-12" />
                   </tr>
                 </thead>
@@ -135,7 +168,7 @@ export default function UserNewSalesOrderPage() {
                       <td className="px-3 py-2">
                         <select
                           value={row.productId}
-                          onChange={(e) => updateLine(i, "productId", e.target.value)}
+                          onChange={(e) => onSelectProduct(i, e.target.value)}
                           className="w-full px-2.5 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-600 bg-white"
                         >
                           <option value="">Select product</option>
@@ -161,6 +194,7 @@ export default function UserNewSalesOrderPage() {
                           value={row.unitPrice}
                           onChange={(e) => updateLine(i, "unitPrice", e.target.value)}
                           className="w-full px-2.5 py-2 border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-600"
+                          title="Fallback if product has no selling price"
                         />
                       </td>
                       <td className="px-3 py-2">
@@ -178,8 +212,47 @@ export default function UserNewSalesOrderPage() {
                 </tbody>
               </table>
             </div>
-            <p className="mt-2 text-sm text-stone-600">Total: <strong>${total.toFixed(2)}</strong></p>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-stone-700 mb-1.5">Coupon code (optional)</label>
+            <input
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+              placeholder="e.g. SAVE10"
+              className="w-full max-w-xs px-3.5 py-2.5 border border-stone-300 rounded-lg uppercase"
+            />
+          </div>
+
+          {preview && (
+            <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl text-sm space-y-2">
+              <p className="font-medium text-stone-800">Price preview</p>
+              {preview.lines?.map((line, idx) => (
+                <div key={idx} className="text-stone-700 border-b border-stone-200 pb-2 last:border-0">
+                  <span className="font-medium">{line.productName}</span> × {line.quantity}
+                  <br />
+                  <span className="text-xs text-stone-500">
+                    Base ₹{Number(line.baseUnitPrice).toLocaleString("en-IN")}/unit
+                    {line.tierDiscountPercent > 0 && (
+                      <> → tier {line.tierDiscountPercent}% off → <strong>₹{Number(line.unitPriceAfterTier).toLocaleString("en-IN")}</strong>/unit</>
+                    )}
+                    {line.tierDiscountPercent === 0 && <> → <strong>₹{Number(line.unitPriceAfterTier).toLocaleString("en-IN")}</strong>/unit</>}
+                  </span>
+                  <br />
+                  <span>Line: ₹{Number(line.lineSubtotal).toLocaleString("en-IN")}</span>
+                </div>
+              ))}
+              <p>Subtotal: <strong>₹{Number(preview.subtotalBeforeCoupon).toLocaleString("en-IN")}</strong></p>
+              {Number(preview.couponDiscountAmount) > 0 && (
+                <p className="text-emerald-700">
+                  Coupon {preview.appliedCouponCode}: −₹{Number(preview.couponDiscountAmount).toLocaleString("en-IN")}
+                </p>
+              )}
+              <p className="text-lg font-semibold text-stone-900">
+                Total: ₹{Number(preview.totalAmount).toLocaleString("en-IN")}
+              </p>
+            </div>
+          )}
 
           {err && <p className="text-sm text-red-600">{err}</p>}
           <div className="flex gap-3 pt-2">
@@ -196,12 +269,8 @@ export default function UserNewSalesOrderPage() {
           </div>
         </form>
       </div>
-      <div className="md:w-[40%] shrink-0 rounded-lg overflow-hidden flex">
-        <img
-          src="/img/order.png"
-          alt=""
-          className="w-full h-full object-cover min-h-0"
-        />
+      <div className="md:w-[40%] shrink-0 rounded-lg overflow-hidden ">
+        <img src="/img/order.png" alt="" className="w-full object-cover " />
       </div>
     </div>
   );

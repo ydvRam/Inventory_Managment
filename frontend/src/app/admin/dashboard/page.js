@@ -8,9 +8,10 @@ import {
   HiOutlineShoppingCart,
   HiOutlineCurrencyDollar,
   HiOutlineExclamationTriangle,
+  HiOutlineBanknotes,
+  HiOutlineDocumentText,
   HiOutlinePlusCircle,
   HiOutlineShoppingBag,
-  HiOutlineDocumentText,
 } from "react-icons/hi2";
 import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 import { SalesChart, PurchaseVsSalesChart, MonthlyRevenueChart } from "@/components/admin/DashboardCharts";
@@ -21,6 +22,8 @@ const statsConfig = [
   { key: "totalCustomers", label: "Total Customers", icon: HiOutlineUsers, color: "blue", format: "number" },
   { key: "totalOrders", label: "Total Orders", icon: HiOutlineShoppingCart, color: "amber", format: "number" },
   { key: "totalRevenue", label: "Total Revenue", icon: HiOutlineCurrencyDollar, color: "emerald", format: "currency" },
+  { key: "pendingPayments", label: "Pending Payments", icon: HiOutlineBanknotes, color: "amber", format: "inr" },
+  { key: "unpaidInvoices", label: "Unpaid Invoices", icon: HiOutlineDocumentText, color: "red", format: "number" },
   { key: "lowStockItems", label: "Low Stock Items", icon: HiOutlineExclamationTriangle, color: "red", format: "number" },
 ];
 
@@ -45,6 +48,8 @@ export default function AdminDashboardPage() {
     totalCustomers: 0,
     totalOrders: 0,
     totalRevenue: 0,
+    pendingPayments: 0,
+    unpaidInvoices: 0,
     lowStockItems: 0,
   });
   const [statsLoading, setStatsLoading] = useState(true);
@@ -59,8 +64,9 @@ export default function AdminDashboardPage() {
       fetch(getApiUrl("customers"), { headers }).then((r) => (r.ok ? r.json() : [])),
       fetch(getApiUrl("sales-orders"), { headers }).then((r) => (r.ok ? r.json() : [])),
       fetch(getApiUrl("purchase-orders"), { headers }).then((r) => (r.ok ? r.json() : [])),
+      fetch(getApiUrl("invoices/due-summary"), { headers }).then((r) => (r.ok ? r.json() : { totalPending: 0, unpaidCount: 0 })),
     ])
-      .then(([products, customers, salesOrders, purchaseOrders]) => {
+      .then(([products, customers, salesOrders, purchaseOrders, dueSummary]) => {
         const productsList = Array.isArray(products) ? products : [];
         const customersList = Array.isArray(customers) ? customers : [];
         const ordersList = Array.isArray(salesOrders) ? salesOrders : [];
@@ -72,17 +78,21 @@ export default function AdminDashboardPage() {
         const lowStock = productsList.filter(
           (p) => p.reorderPoint != null && (p.stockLevel ?? 0) <= p.reorderPoint
         ).length;
+        const due = dueSummary?.totalPending ?? 0;
+        const unpaid = dueSummary?.unpaidCount ?? 0;
         setStats({
           totalProducts: productsList.length,
           totalCustomers: customersList.length,
           totalOrders: ordersList.length,
           totalRevenue: revenue,
+          pendingPayments: due,
+          unpaidInvoices: unpaid,
           lowStockItems: lowStock,
         });
         setChartData({ salesOrders: ordersList, purchaseOrders: purchaseList });
       })
       .catch(() => {
-        setStats({ totalProducts: 0, totalCustomers: 0, totalOrders: 0, totalRevenue: 0, lowStockItems: 0 });
+        setStats({ totalProducts: 0, totalCustomers: 0, totalOrders: 0, totalRevenue: 0, pendingPayments: 0, unpaidInvoices: 0, lowStockItems: 0 });
         setChartData({ salesOrders: [], purchaseOrders: [] });
       })
       .finally(() => setStatsLoading(false));
@@ -118,10 +128,10 @@ export default function AdminDashboardPage() {
           {statsLoading ? (
             <p className="text-stone-500">Loading stats...</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {statsConfig.map(({ key, label, icon: Icon, color, format }) => {
                 const raw = stats[key] ?? 0;
-                const value = format === "currency" ? `$${Number(raw).toFixed(2)}` : String(raw);
+                const value = format === "currency" ? `₹${Number(raw).toFixed(2)}` : format === "inr" ? `₹${Number(raw).toLocaleString("en-IN")}` : String(raw);
                 return (
                   <div
                     key={key}

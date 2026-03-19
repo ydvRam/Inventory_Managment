@@ -6,13 +6,6 @@ import { HiOutlineEye } from "react-icons/hi2";
 import { getApiUrl, getAuthHeaders } from "@/lib/auth";
 import { format } from 'date-fns';
 
-const lowStockProducts = [
-  { id: "1", name: "Widget A", sku: "WDG-001", stock: 3, reorderAt: 10 },
-  { id: "2", name: "Gadget B", sku: "GDG-002", stock: 5, reorderAt: 15 },
-  { id: "3", name: "Part C", sku: "PRT-003", stock: 1, reorderAt: 5 },
-  { id: "4", name: "Tool D", sku: "TOL-004", stock: 2, reorderAt: 8 },
-];
-
 const orderStatusClass = {
   Delivered: "bg-emerald-100 text-emerald-800",
   Confirmed: "bg-blue-100 text-blue-800",
@@ -115,6 +108,23 @@ export function RecentOrdersTable() {
 }
 
 export function LowStockProductsTable() {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(getApiUrl("products"), { headers: getAuthHeaders() })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        const lowStock = list.filter(
+          (p) => p.reorderPoint != null && (p.stockLevel ?? 0) <= p.reorderPoint
+        );
+        setRows(lowStock);
+      })
+      .catch(() => setRows([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <TableCard title="Low Stock Products" viewAllHref="/admin/products">
       <table className="w-full text-left text-sm">
@@ -128,33 +138,43 @@ export function LowStockProductsTable() {
           </tr>
         </thead>
         <tbody>
-          {lowStockProducts.length === 0 ? (
+          {loading ? (
+            <tr>
+              <td colSpan={5} className="px-4 py-6 text-center text-stone-500">
+                Loading...
+              </td>
+            </tr>
+          ) : rows.length === 0 ? (
             <tr>
               <td colSpan={5} className="px-4 py-6 text-center text-stone-500">
                 No low stock items.
               </td>
             </tr>
           ) : (
-            lowStockProducts.map((row) => (
-              <tr key={row.id} className="border-b border-stone-100 hover:bg-stone-50/50">
-                <td className="px-4 py-2.5 font-medium text-stone-900">{row.name}</td>
-                <td className="px-4 py-2.5 text-stone-600">{row.sku}</td>
-                <td className="px-4 py-2.5">
-                  <span className={row.stock <= 2 ? "font-medium text-red-600" : "text-amber-600"}>
-                    {row.stock}
-                  </span>
-                </td>
-                <td className="px-4 py-2.5 text-stone-500">{row.reorderAt}</td>
-                <td className="px-4 py-2.5">
-                  <Link
-                    href={`/admin/products/${row.id}/edit`}
-                    className="text-teal-600 hover:text-teal-700 text-xs font-medium"
-                  >
-                    Edit
-                  </Link>
-                </td>
-              </tr>
-            ))
+            rows.map((row) => {
+              const stock = row.stockLevel ?? 0;
+              const reorderAt = row.reorderPoint ?? "—";
+              return (
+                <tr key={row.id} className="border-b border-stone-100 hover:bg-stone-50/50">
+                  <td className="px-4 py-2.5 font-medium text-stone-900">{row.name ?? "—"}</td>
+                  <td className="px-4 py-2.5 text-stone-600">{row.sku ?? "—"}</td>
+                  <td className="px-4 py-2.5">
+                    <span className={stock <= 2 ? "font-medium text-red-600" : "text-amber-600"}>
+                      {stock}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-stone-500">{reorderAt}</td>
+                  <td className="px-4 py-2.5">
+                    <Link
+                      href={`/admin/products/${row.id}/edit`}
+                      className="text-teal-600 hover:text-teal-700 text-xs font-medium"
+                    >
+                      Edit
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })
           )}
         </tbody>
       </table>

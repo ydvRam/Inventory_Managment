@@ -14,6 +14,7 @@ export default function AdminNewProductPage() {
   const [categoryId, setCategoryId] = useState("");
   const [stockLevel, setStockLevel] = useState(0);
   const [reorderPoint, setReorderPoint] = useState(0);
+  const [minStockLevel, setMinStockLevel] = useState("");
   const [sellingPrice, setSellingPrice] = useState("");
   const [costPrice, setCostPrice] = useState("");
   const [err, setErr] = useState("");
@@ -25,8 +26,17 @@ export default function AdminNewProductPage() {
       return;
     }
     fetch(getApiUrl("categories"), { headers: getAuthHeaders() })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => setCategories(Array.isArray(data) ? data : []));
+      .then((res) => {
+        if (!res.ok) {
+          return res.json().catch(() => ({})).then((err) => Promise.reject(new Error(err.message || "Failed to load categories")));
+        }
+        return res.json();
+      })
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
+      .catch((e) => {
+        console.error("Categories fetch failed:", e);
+        setErr(e.message || "Failed to load categories");
+      });
   }, [router]);
 
   async function onSubmit(e) {
@@ -48,6 +58,7 @@ export default function AdminNewProductPage() {
           categoryId,
           stockLevel: Number(stockLevel) || 0,
           reorderPoint: Number(reorderPoint) || 0,
+          minStockLevel: minStockLevel === "" ? null : Number(minStockLevel),
           sellingPrice: sellingPrice === "" ? null : Number(sellingPrice),
           costPrice: costPrice === "" ? null : Number(costPrice),
         }),
@@ -155,6 +166,17 @@ export default function AdminNewProductPage() {
                 min={0}
                 value={reorderPoint}
                 onChange={(e) => setReorderPoint(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-1.5">Min stock level (alert threshold)</label>
+              <input
+                type="number"
+                min={0}
+                placeholder="Optional; uses reorder point if empty"
+                value={minStockLevel}
+                onChange={(e) => setMinStockLevel(e.target.value)}
                 className="w-full px-3.5 py-2.5 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-600"
               />
             </div>

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { HiOutlineSquares2X2, HiOutlineUserCircle, HiOutlineArrowRightOnRectangle, HiOutlineBell, HiOutlineBars3 } from "react-icons/hi2";
+import { HiOutlineSquares2X2, HiOutlineUserCircle, HiOutlineArrowRightOnRectangle, HiOutlineBars3 } from "react-icons/hi2";
 import { getStoredUser, clearAuth } from "@/lib/auth";
+import NotificationBell from "@/components/shared/NotificationBell";
 
 export default function UserNavbar({ onMenuClick }) {
   const [user, setUser] = useState(null);
@@ -37,16 +38,7 @@ export default function UserNavbar({ onMenuClick }) {
         </Link>
       </div>
       <div className="flex items-center gap-4">
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="group relative p-2 rounded-lg hover:bg-stone-100 text-stone-600 hover:text-stone-900 transition-colors"
-        >
-          <HiOutlineBell className="w-5 h-5" />
-          <span className="absolute left-1/2 top-full -translate-x-1/2 mt-1.5 px-2.5 py-1.5 bg-black text-white text-xs font-medium rounded-lg border border-stone-600 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 z-10 whitespace-nowrap">
-            Notifications
-          </span>
-        </button>
+        <NotificationBell />
         <Link
           href="/user"
           className="group relative flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-stone-100 text-sm text-stone-600"

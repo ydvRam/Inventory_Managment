@@ -72,7 +72,7 @@ export default function InvoiceLayout({ invoice, onDownloadPDF, downloading }) {
           <button
             type="button"
             onClick={onDownloadPDF}
-            disabled={downloading}
+            disabled={downloading}   
             className="px-6 py-2.5 rounded-lg bg-stone-800 text-white text-sm font-medium hover:bg-stone-700 disabled:opacity-50"
           >
             {downloading ? "Downloading…" : "Download PDF"}

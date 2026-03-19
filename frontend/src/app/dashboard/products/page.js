@@ -12,11 +12,11 @@ export default function UserProductsPage() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    const user = getStoredUser();
-    if (!user?.id) {
-      router.replace("/login");
-      return;
-    }
+    // const user = getStoredUser();
+    // if (!user?.id) {
+    //   router.replace("/login");
+    //   return;
+    // }
     setErr("");
     fetch(getApiUrl("products"), { headers: getAuthHeaders() })
       .then((res) => {
@@ -86,7 +86,15 @@ export default function UserProductsPage() {
                   <td className="px-4 py-3 text-stone-900">{p.name}</td>
                   <td className="px-4 py-3 text-stone-600">{p.sku}</td>
                   <td className="px-4 py-3 text-stone-600">{p.category?.name ?? "—"}</td>
-                  <td className="px-4 py-3">{p.stockLevel ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    {p.stockLevel === 0 ? (
+                      <span className="font-medium text-red-600">Out of Stock</span>
+                    ) : (p.minStockLevel ?? p.reorderPoint ?? 0) > 0 && p.stockLevel <= (p.minStockLevel ?? p.reorderPoint) ? (
+                      <span className="font-medium text-amber-600">Only {p.stockLevel} left!</span>
+                    ) : (
+                      p.stockLevel ?? "—"
+                    )}
+                  </td>
                   <td className="px-4 py-3">{p.reorderPoint ?? "—"}</td>
                 </tr>
               ))

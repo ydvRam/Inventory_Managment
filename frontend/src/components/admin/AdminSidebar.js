@@ -11,17 +11,21 @@ import {
   HiOutlineShoppingCart,
   HiOutlineDocumentText,
   HiOutlineArchiveBox,
+  HiOutlineArrowUturnLeft,
   HiOutlineArrowRightOnRectangle,
+  HiOutlineTag,
 } from "react-icons/hi2";
 import { clearAuth } from "@/lib/auth";
 
 const links = [
   { href: "/admin/dashboard", label: "Dashboard", icon: HiOutlineSquares2X2 },
   { href: "/admin/products", label: "Products", icon: HiOutlineCube },
+  { href: "/admin/pricing", label: "Pricing", icon: HiOutlineTag },
   { href: "/admin/suppliers", label: "Suppliers", icon: HiOutlineTruck },
   { href: "/admin/purchase-orders", label: "Purchase Orders", icon: HiOutlineShoppingBag },
   { href: "/admin/sales-orders", label: "Sales Orders", icon: HiOutlineShoppingCart },
   { href: "/admin/invoices", label: "Invoices", icon: HiOutlineDocumentText },
+  { href: "/admin/returns", label: "Returns", icon: HiOutlineArrowUturnLeft },
   { href: "/admin/inventory", label: "Inventory", icon: HiOutlineArchiveBox },
   { href: "/user", label: "Profile", icon: HiOutlineUserCircle },
 ];

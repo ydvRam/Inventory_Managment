@@ -6,6 +6,7 @@ import { getStoredUser, isAdmin } from "@/lib/auth";
 import AdminNavbar from "@/components/admin/AdminNavbar";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import DashboardBanner from "@/components/shared/DashboardBanner";
+import StockAlertToast from "@/components/shared/StockAlertToast";
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
@@ -22,6 +23,7 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-stone-50">
+      <StockAlertToast />
       <AdminNavbar onMenuClick={() => setSidebarOpen((prev) => !prev)} />
       <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main className="pt-14 pl-4 pr-4 md:pl-6 md:pr-6 pb-6 md:ml-56 min-h-screen overflow-auto">

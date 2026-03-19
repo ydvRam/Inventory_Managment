@@ -25,11 +25,11 @@ export default function AdminSalesOrdersPage() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
-    const user = getStoredUser();
-    if (!user?.id) {
-      router.replace("/login");
-      return;
-    }
+    // const user = getStoredUser();
+    // if (!user?.id) {
+    //   router.replace("/login");
+    //   return;
+    // }
     fetch(getApiUrl("sales-orders"), { headers: getAuthHeaders() })
       .then((res) => {
         if (res.status === 401 || res.status === 403) {

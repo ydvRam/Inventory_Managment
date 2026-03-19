@@ -44,6 +44,20 @@ const cardConfig = [
     color: "emerald",
     href: "/dashboard/invoices",
   },
+  {
+    key: "pendingPayments",
+    label: "Pending payments",
+    icon: HiOutlineBanknotes,
+    color: "amber",
+    href: "/dashboard/invoices",
+  },
+  {
+    key: "unpaidInvoices",
+    label: "Unpaid invoices",
+    icon: HiOutlineDocumentText,
+    color: "red",
+    href: "/dashboard/invoices",
+  },
 ];
 
 const colorClasses = {
@@ -51,6 +65,7 @@ const colorClasses = {
   amber: "bg-amber-50 text-amber-600",
   blue: "bg-blue-50 text-blue-600",
   emerald: "bg-emerald-50 text-emerald-600",
+  red: "bg-red-50 text-red-600",
 };
 
 const quickActions = [
@@ -80,9 +95,12 @@ export default function UserDashboardPage() {
     pendingOrders: 0,
     invoices: 0,
     paymentReceived: 0,
+    pendingPayments: 0,
+    unpaidInvoices: 0,
   });
   const [orders, setOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [lowStockProducts, setLowStockProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
@@ -101,8 +119,10 @@ export default function UserDashboardPage() {
       fetch(getApiUrl("sales-orders"), { headers }).then((r) => (r.status === 200 ? r.json() : [])),
       fetch(getApiUrl("invoices"), { headers }).then((r) => (r.status === 200 ? r.json() : [])),
       fetch(getApiUrl("customers"), { headers }).then((r) => (r.status === 200 ? r.json() : [])),
+      fetch(getApiUrl("products"), { headers }).then((r) => (r.status === 200 ? r.json() : [])),
+      fetch(getApiUrl("invoices/due-summary"), { headers }).then((r) => (r.ok ? r.json() : { totalPending: 0, unpaidCount: 0 })),
     ])
-      .then(([ordersList, invoicesList, customersList]) => {
+      .then(([ordersList, invoicesList, customersList, productsList, dueSummary]) => {
         const o = Array.isArray(ordersList) ? ordersList : [];
         const inv = Array.isArray(invoicesList) ? invoicesList : [];
         const cust = Array.isArray(customersList) ? customersList : [];
@@ -119,12 +139,21 @@ export default function UserDashboardPage() {
         );
         const pending = o.filter((ord) => ord.status === "Pending").length;
         const paid = inv.filter((i) => i.status === "Paid");
+        const products = Array.isArray(productsList) ? productsList : [];
+        const lowStock = products.filter(
+          (p) => p.reorderPoint != null && (p.stockLevel ?? 0) <= p.reorderPoint
+        );
+        setLowStockProducts(lowStock);
+        const due = dueSummary?.totalPending ?? 0;
+        const unpaid = dueSummary?.unpaidCount ?? 0;
         setStats({
           salesToday: todayOrders.length,
           salesTodayAmount: salesTodayAmount.toFixed(2),
           pendingOrders: pending,
           invoices: inv.length,
           paymentReceived: paid.length,
+          pendingPayments: due,
+          unpaidInvoices: unpaid,
         });
       })
       .catch(() => setErr("Failed to load dashboard"))
@@ -149,12 +178,16 @@ export default function UserDashboardPage() {
             {cardConfig.map(({ key, label, icon: Icon, color, href }) => {
               const value =
                 key === "salesToday"
-                  ? `$${stats.salesTodayAmount} (${stats.salesToday})`
+                  ? `₹${stats.salesTodayAmount} (${stats.salesToday})`
                   : key === "pendingOrders"
                     ? stats.pendingOrders
                     : key === "invoices"
                       ? stats.invoices
-                      : stats.paymentReceived;
+                      : key === "paymentReceived"
+                        ? stats.paymentReceived
+                        : key === "pendingPayments"
+                          ? `₹${Number(stats.pendingPayments).toLocaleString("en-IN")}`
+                          : stats.unpaidInvoices;
               return (
                 <Link
                   key={key}
@@ -289,6 +322,59 @@ export default function UserDashboardPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+
+          <div className="mt-6 bg-white border border-stone-200 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-stone-200 bg-stone-50 flex items-center justify-between">
+              <h3 className="font-semibold text-stone-900">Low stock products</h3>
+              <Link href="/dashboard/products" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
+                View all products
+              </Link>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-stone-50 border-b border-stone-200">
+                  <tr>
+                    <th className="px-4 py-2.5 font-medium text-stone-700">Product</th>
+                    <th className="px-4 py-2.5 font-medium text-stone-700">SKU</th>
+                    <th className="px-4 py-2.5 font-medium text-stone-700">Stock</th>
+                    <th className="px-4 py-2.5 font-medium text-stone-700">Reorder at</th>
+                    <th className="px-4 py-2.5 w-16" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {lowStockProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-6 text-center text-stone-500">
+                        No low stock items.
+                      </td>
+                    </tr>
+                  ) : (
+                    lowStockProducts.slice(0, 6).map((p) => (
+                      <tr key={p.id} className="border-b border-stone-100 hover:bg-stone-50/50">
+                        <td className="px-4 py-2.5 text-stone-900">{p.name ?? "—"}</td>
+                        <td className="px-4 py-2.5 text-stone-600">{p.sku ?? "—"}</td>
+                        <td className="px-4 py-2.5">
+                          <span className={(p.stockLevel ?? 0) <= 2 ? "font-medium text-red-600" : "text-amber-600"}>
+                            {p.stockLevel ?? 0}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-stone-600">{p.reorderPoint ?? "—"}</td>
+                        <td className="px-4 py-2.5">
+                          <Link
+                            href={`/dashboard/products/${p.id}/edit`}
+                            className="text-teal-600 hover:text-teal-700 inline-flex items-center gap-1"
+                            title="Edit"
+                          >
+                            <HiOutlineEye className="w-4 h-4" />
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 

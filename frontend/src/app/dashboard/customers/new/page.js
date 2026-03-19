@@ -108,7 +108,7 @@ export default function UserNewCustomerPage() {
         <img
           src="/img/customer.png"
           alt=""
-          className="w-full h-full object-cover min-h-0"
+          className="w-full h-full object-cover"
         />
       </div>
     </div>

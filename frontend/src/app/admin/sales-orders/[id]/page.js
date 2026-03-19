@@ -5,6 +5,10 @@ import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 
+function rupee(n) {
+  return `₹${Number(n || 0).toLocaleString("en-IN")}`;
+}
+
 const statusBadge = (status) => {
   const c =
     status === "Delivered"
@@ -80,6 +84,15 @@ export default function AdminSalesOrderDetailPage() {
   const canFulfill = so.status === "Pending";
   const isFulfilled = so.status !== "Pending" && so.status !== "Cancelled";
 
+  const linesSubtotal =
+    so.subtotalBeforeCoupon != null && so.subtotalBeforeCoupon !== ""
+      ? Number(so.subtotalBeforeCoupon)
+      : (so.items || []).reduce(
+          (sum, i) => sum + (Number(i.quantity) || 0) * (Number(i.unitPrice) || 0),
+          0,
+        );
+  const couponDiscount = Number(so.couponDiscountAmount || 0);
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -102,8 +115,16 @@ export default function AdminSalesOrderDetailPage() {
           </div>
           <div>
             <span className="text-sm text-stone-500">Total</span>
-            <p className="font-medium text-stone-900">${Number(so.totalAmount || 0).toFixed(2)}</p>
+            <p className="font-medium text-stone-900">{rupee(so.totalAmount)}</p>
           </div>
+          {couponDiscount > 0 && (
+            <div>
+              <span className="text-sm text-stone-500">Coupon</span>
+              <p className="font-medium text-emerald-700">
+                {so.couponCode || "—"} (−{rupee(couponDiscount)})
+              </p>
+            </div>
+          )}
           <div>
             <span className="text-sm text-stone-500">Date</span>
             <p className="font-medium text-stone-900">
@@ -117,25 +138,49 @@ export default function AdminSalesOrderDetailPage() {
               <th className="px-4 py-3 text-left font-medium text-stone-700">Product</th>
               <th className="px-4 py-3 text-left font-medium text-stone-700">SKU</th>
               <th className="px-4 py-3 text-right font-medium text-stone-700">Qty</th>
-              <th className="px-4 py-3 text-right font-medium text-stone-700">Unit price</th>
+              <th className="px-4 py-3 text-right font-medium text-stone-700">Base / unit</th>
+              <th className="px-4 py-3 text-right font-medium text-stone-700">Tier</th>
+              <th className="px-4 py-3 text-right font-medium text-stone-700">Final / unit</th>
               <th className="px-4 py-3 text-right font-medium text-stone-700">Line total</th>
             </tr>
           </thead>
           <tbody>
             {(so.items || []).map((item) => {
-              const lineTotal = (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0);
+              const base =
+                item.baseUnitPrice != null && item.baseUnitPrice !== ""
+                  ? Number(item.baseUnitPrice)
+                  : Number(item.unitPrice || 0);
+              const tier = Number(item.tierDiscountPercent) || 0;
+              const finalUnit = Number(item.unitPrice || 0);
+              const lineTotal = (Number(item.quantity) || 0) * finalUnit;
               return (
                 <tr key={item.id} className="border-b border-stone-100">
                   <td className="px-4 py-3 text-stone-900">{item.product?.name ?? "—"}</td>
                   <td className="px-4 py-3 text-stone-600">{item.product?.sku ?? "—"}</td>
                   <td className="px-4 py-3 text-right">{item.quantity}</td>
-                  <td className="px-4 py-3 text-right">${Number(item.unitPrice || 0).toFixed(2)}</td>
-                  <td className="px-4 py-3 text-right font-medium">${lineTotal.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-right text-stone-600">{rupee(base)}</td>
+                  <td className="px-4 py-3 text-right text-stone-600">{tier > 0 ? `${tier}%` : "—"}</td>
+                  <td className="px-4 py-3 text-right font-medium">{rupee(finalUnit)}</td>
+                  <td className="px-4 py-3 text-right font-medium">{rupee(lineTotal)}</td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+        <div className="px-4 py-3 border-t border-stone-200 bg-stone-50 text-sm space-y-1 text-right">
+          <p>
+            <span className="text-stone-500">Subtotal (after tier):</span>{" "}
+            <strong>{rupee(linesSubtotal)}</strong>
+          </p>
+          {couponDiscount > 0 && (
+            <p className="text-emerald-700">
+              Coupon discount: −{rupee(couponDiscount)}
+            </p>
+          )}
+          <p className="text-base font-semibold text-stone-900 pt-1">
+            Final total: {rupee(so.totalAmount)}
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">

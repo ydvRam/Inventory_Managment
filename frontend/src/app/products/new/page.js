@@ -23,8 +23,15 @@ export default function NewProductPage() {
       return;
     }
     fetch(getApiUrl("categories"), { headers: getAuthHeaders() })
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data) => setCategories(Array.isArray(data) ? data : []));
+      .then((res) => {
+        if (!res.ok) return res.json().catch(() => ({})).then((err) => Promise.reject(new Error(err.message || "Failed to load categories")));
+        return res.json();
+      })
+      .then((data) => setCategories(Array.isArray(data) ? data : []))
+      .catch((e) => {
+        console.error("Categories fetch failed:", e);
+        setErr(e.message || "Failed to load categories");
+      });
   }, [router]);
 
   async function onSubmit(e) {

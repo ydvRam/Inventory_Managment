@@ -24,6 +24,7 @@ export default function UserInvoiceDetailPage() {
   const [paying, setPaying] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [paymentAmount, setPaymentAmount] = useState("");
 
   useEffect(() => {
     if (!getStoredUser()?.id) {
@@ -35,27 +36,49 @@ export default function UserInvoiceDetailPage() {
         if (res.status === 401 || res.status === 403) router.replace("/login");
         return res.ok ? res.json() : null;
       })
-      .then(setInv)
+      .then((data) => {
+        setInv(data);
+        const total = Number(data?.amount ?? 0);
+        const paid = Number(data?.paidAmount ?? 0);
+        const due = total - paid;
+        setPaymentAmount(due > 0 ? String(due) : "");
+      })
       .catch(() => setErr("Failed to load"))
       .finally(() => setLoading(false));
   }, [id, router]);
 
   function handlePay() {
     if (!inv || inv.status === "Paid") return;
-    if (!confirm(`Pay $${Number(inv.amount || 0).toFixed(2)} by ${paymentMethod}?`)) return;
+    const total = Number(inv.amount ?? 0);
+    const paid = Number(inv.paidAmount ?? 0);
+    const due = total - paid;
+    const amount = Number(paymentAmount) || due;
+    if (amount <= 0) {
+      setErr("Enter a valid payment amount");
+      return;
+    }
+    const remaining = due - amount;
+    const msg = remaining > 0
+      ? `Pay ₹${amount.toLocaleString("en-IN")} by ${paymentMethod}? ₹${remaining.toLocaleString("en-IN")} will remain pending.`
+      : `Pay ₹${amount.toLocaleString("en-IN")} by ${paymentMethod}? (Full payment)`;
+    if (!confirm(msg)) return;
     setPaying(true);
     setErr("");
     fetch(getApiUrl(`invoices/${id}/pay`), {
       method: "POST",
       headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      body: JSON.stringify({ method: paymentMethod }),
+      body: JSON.stringify({ method: paymentMethod, amount }),
     })
       .then((res) => {
         if (res.status === 401 || res.status === 403) router.replace("/login");
         if (!res.ok) return res.json().then((d) => { throw new Error(d.message || "Payment failed"); });
         return res.json();
       })
-      .then(setInv)
+      .then((data) => {
+        setInv(data);
+        const newDue = Number(data?.amount ?? 0) - Number(data?.paidAmount ?? 0);
+        setPaymentAmount(newDue > 0 ? String(newDue) : "");
+      })
       .catch((e) => setErr(e.message || "Payment failed"))
       .finally(() => setPaying(false));
   }
@@ -95,7 +118,22 @@ export default function UserInvoiceDetailPage() {
         <div className="flex items-center gap-3">
           {statusBadge(inv.status)}
           {inv.status === "Unpaid" && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm text-stone-600">
+                Total ₹{Number(inv.amount ?? 0).toLocaleString("en-IN")}
+                {Number(inv.paidAmount ?? 0) > 0 && (
+                  <> · Paid ₹{Number(inv.paidAmount ?? 0).toLocaleString("en-IN")} · Due ₹{(Number(inv.amount ?? 0) - Number(inv.paidAmount ?? 0)).toLocaleString("en-IN")}</>
+                )}
+              </span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="Amount"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                className="w-28 border border-stone-300 rounded-lg px-3 py-2 text-sm text-stone-800 bg-white"
+              />
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}

@@ -33,7 +33,8 @@ export class SalesOrdersController {
     @Body()
     body: {
       customerId: string;
-      items: { productId: string; quantity: number; unitPrice: string }[];
+      items: { productId: string; quantity: number; unitPrice?: string }[];
+      couponCode?: string;
     },
   ) {
     return this.service.create(body);

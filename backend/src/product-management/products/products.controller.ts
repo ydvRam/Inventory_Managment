@@ -31,7 +31,7 @@ export class ProductsController {
 
   @Post()
   @UseGuards(AdminGuard)
-  create(@Body() body: Partial<{ name: string; description: string; sku: string; categoryId: string; stockLevel: number; reorderPoint: number }>) {
+  create(@Body() body: Partial<{ name: string; description: string; sku: string; categoryId: string; stockLevel: number; reorderPoint: number; minStockLevel: number | null }>) {
     return this.service.create(body);
   }
 
@@ -39,7 +39,7 @@ export class ProductsController {
   @UseGuards(AdminGuard)
   update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: Partial<{ name: string; description: string; sku: string; categoryId: string; stockLevel: number; reorderPoint: number }>,
+    @Body() body: Partial<{ name: string; description: string; sku: string; categoryId: string; stockLevel: number; reorderPoint: number; minStockLevel: number | null }>,
   ) {
     return this.service.update(id, body);
   }

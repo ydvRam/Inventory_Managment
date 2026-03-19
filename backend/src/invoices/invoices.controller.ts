@@ -35,6 +35,11 @@ export class InvoicesController {
     return this.service.findRecentPayments(Number.isNaN(n) ? 10 : n);
   }
 
+  @Get('due-summary')
+  getDueSummary() {
+    return this.service.getDueSummary();
+  }
+
   @Get(':id/pdf')
   async getPdf(@Param('id', ParseUUIDPipe) id: string) {
     const buffer = await this.service.generatePdf(id);
@@ -64,12 +69,13 @@ export class InvoicesController {
     return this.service.updateStatus(id, body.status);
   }
 
-  /** Fake payment: mark invoice as paid (full amount). Body: { method?: string } e.g. Card, Bank, Cash. */
+  /** Record payment (full or partial). Body: { method?: string, amount?: number }. */
   @Post(':id/pay')
   pay(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { method?: string },
+    @Body() body: { method?: string; amount?: number },
   ) {
-    return this.service.pay(id, body?.method);
+    return this.service.pay(id, body?.method, body?.amount);
   }
+
 }

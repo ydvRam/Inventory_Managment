@@ -41,6 +41,16 @@ export class SalesOrder {
   @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
   totalAmount: string;
 
+  /** Sum of line totals after tier pricing, before coupon. */
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
+  subtotalBeforeCoupon: string;
+
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
+  couponDiscountAmount: string;
+
+  @Column({ type: 'varchar', length: 40, nullable: true })
+  couponCode: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

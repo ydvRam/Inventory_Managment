@@ -30,6 +30,15 @@ export class SalesOrderItem {
   @Column({ type: 'int' })
   quantity: number;
 
+  /** List / base price before bulk tier. */
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
+  baseUnitPrice: string;
+
+  /** Bulk tier discount 0–100. */
+  @Column({ type: 'int', default: 0 })
+  tierDiscountPercent: number;
+
+  /** Final unit price after tier (before order-level coupon). */
   @Column({ type: 'decimal', precision: 14, scale: 2 })
   unitPrice: string;
 }

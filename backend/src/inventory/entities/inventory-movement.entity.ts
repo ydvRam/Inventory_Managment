@@ -12,6 +12,7 @@ export enum MovementType {
   PURCHASE_RECEIPT = 'PURCHASE_RECEIPT',
   SALE = 'SALE',
   ADJUSTMENT = 'ADJUSTMENT',
+  RETURN = 'RETURN',
 }
 
 @Entity('inventory_movements')

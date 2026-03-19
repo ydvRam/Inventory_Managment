@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { Category } from './entities/category.entity';
 import { Product } from './entities/product.entity';
 import { ProductVariant } from './entities/product-variant.entity';
@@ -15,6 +16,7 @@ import { VariantsController } from './variants/variants.controller';
   imports: [
     TypeOrmModule.forFeature([Category, Product, ProductVariant]),
     AuthModule,
+    NotificationsModule,
   ],
   controllers: [CategoriesController, ProductsController, VariantsController],
   providers: [CategoriesService, ProductsService, VariantsService],

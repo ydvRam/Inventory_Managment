@@ -12,7 +12,8 @@ import { InventoryModule } from './inventory/inventory.module';
 import { CustomersModule } from './customers/customers.module';
 import { SalesOrdersModule } from './sales-orders/sales-orders.module';
 import { InvoicesModule } from './invoices/invoices.module';
-
+import { ReturnsModule } from './returns/returns.module';
+import { NotificationsModule } from './notifications/notifications.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -45,6 +46,8 @@ import { InvoicesModule } from './invoices/invoices.module';
     CustomersModule,
     SalesOrdersModule,
     InvoicesModule,
+    ReturnsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

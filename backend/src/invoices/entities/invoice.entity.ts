@@ -13,6 +13,7 @@ import { Customer } from '../../customers/entities/customer.entity';
 export enum InvoiceStatus {
   UNPAID = 'Unpaid',
   PAID = 'Paid',
+  REFUNDED = 'Refunded',
 }
 
 @Entity('invoices')
@@ -36,6 +37,9 @@ export class Invoice {
 
   @Column({ type: 'decimal', precision: 14, scale: 2 })
   amount: string;
+
+  @Column({ type: 'decimal', precision: 14, scale: 2, default: 0 })
+  paidAmount: string;
 
   @Column({
     type: 'enum',

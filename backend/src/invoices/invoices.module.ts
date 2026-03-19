@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { Invoice } from './entities/invoice.entity';
 import { Payment } from './entities/payment.entity';
 import { SalesOrder } from '../sales-orders/entities/sales-order.entity';
@@ -11,6 +12,7 @@ import { InvoicesController } from './invoices.controller';
   imports: [
     TypeOrmModule.forFeature([Invoice, Payment, SalesOrder]),
     AuthModule,
+    NotificationsModule,
   ],
   controllers: [InvoicesController],
   providers: [InvoicesService],

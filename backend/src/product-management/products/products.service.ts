@@ -2,12 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from '../entities/product.entity';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly repo: Repository<Product>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findAll(categoryId?: string): Promise<Product[]> {
@@ -30,13 +32,25 @@ export class ProductsService {
 
   async create(dto: Partial<Product>): Promise<Product> {
     const p = this.repo.create(dto);
-    return this.repo.save(p);
+    const saved = await this.repo.save(p);
+    try {
+      await this.notificationsService.notifyIfLowStock(saved);
+    } catch (err) {
+      console.error('notifyIfLowStock failed:', err);
+    }
+    return saved;
   }
 
   async update(id: string, dto: Partial<Product>): Promise<Product> {
     const p = await this.findOne(id);
     Object.assign(p, dto);
-    return this.repo.save(p);
+    const saved = await this.repo.save(p);
+    try {
+      await this.notificationsService.notifyIfLowStock(saved);
+    } catch (err) {
+      console.error('notifyIfLowStock failed:', err);
+    }
+    return saved;
   }
 
   async remove(id: string): Promise<void> {

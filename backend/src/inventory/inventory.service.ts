@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Inventory } from './entities/inventory.entity';
 import { InventoryMovement, MovementType } from './entities/inventory-movement.entity';
 import { Product } from '../product-management/entities/product.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class InventoryService {
@@ -14,6 +15,7 @@ export class InventoryService {
     private readonly movementRepo: Repository<InventoryMovement>,
     @InjectRepository(Product)
     private readonly productRepo: Repository<Product>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findAll(): Promise<Inventory[]> {
@@ -57,6 +59,9 @@ export class InventoryService {
         movementRef.referenceType,
         movementRef.referenceId,
       );
+    }
+    if (product) {
+      await this.notificationsService.notifyIfLowStock(product);
     }
     return inv;
   }
@@ -103,6 +108,9 @@ export class InventoryService {
         movementRef.referenceId,
       );
     }
+    if (product) {
+      await this.notificationsService.notifyIfLowStock(product);
+    }
     return inv;
   }
 
@@ -146,6 +154,7 @@ export class InventoryService {
     if (product) {
       product.stockLevel = quantity;
       await this.productRepo.save(product);
+      await this.notificationsService.notifyIfLowStock(product);
     }
     return inv;
   }

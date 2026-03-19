@@ -10,7 +10,15 @@ export class CategoriesService {
     private readonly repo: Repository<Category>,
   ) {}
 
+  /** Returns all categories (for dropdowns, e.g. product form). */
   async findAll(): Promise<Category[]> {
+    return this.repo.find({
+      order: { name: 'ASC' },
+    });
+  }
+
+  /** Returns only root categories (parentId null) for tree views. */
+  async findRoots(): Promise<Category[]> {
     return this.repo.find({
       relations: ['children'],
       where: { parentId: IsNull() },

@@ -6,6 +6,7 @@ const PDFDocument = require('pdfkit');
 import { Invoice, InvoiceStatus } from './entities/invoice.entity';
 import { Payment } from './entities/payment.entity';
 import { SalesOrder } from '../sales-orders/entities/sales-order.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const COMPANY_NAME = 'INVENTORY SYSTEM';
 const COMPANY_ADDRESS = 'Ahmedabad, Gujarat, India';
@@ -29,6 +30,7 @@ export class InvoicesService {
     private readonly paymentRepo: Repository<Payment>,
     @InjectRepository(SalesOrder)
     private readonly salesOrderRepo: Repository<SalesOrder>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async findAll(): Promise<Invoice[]> {
@@ -68,15 +70,18 @@ export class InvoicesService {
       salesOrderId: so.id,
       customerId: so.customerId,
       amount: so.totalAmount,
+      paidAmount: '0',
       status: InvoiceStatus.UNPAID,
       invoiceNumber,
     });
-    return this.repo.save(invoice).then((saved) =>
-      this.repo.findOne({
-        where: { id: saved.id },
-        relations: ['salesOrder', 'customer'],
-      }) as Promise<Invoice>,
-    );
+    const saved = await this.repo.save(invoice);
+    const full = await this.findOne(saved.id);
+    const total = Number(full.amount ?? 0);
+    if (total > 0) {
+      const productNames = full.salesOrder?.items?.map((i) => (i as { product?: { name?: string } }).product?.name).filter(Boolean) as string[] | undefined;
+      await this.notificationsService.notifyDuePayment(full.id, full.invoiceNumber, total, productNames);
+    }
+    return full;
   }
 
   async updateStatus(id: string, status: InvoiceStatus): Promise<Invoice> {
@@ -87,25 +92,52 @@ export class InvoicesService {
   }
 
   /**
-   * Record payment for the full invoice amount. Marks invoice as Paid.
-   * method must be one of: Bank, Cash, Card (static list). Defaults to Cash if missing/invalid.
+   * Record payment (full or partial). Full: amount = remaining, marks Paid. Partial: creates "still pending" notification.
    */
-  async pay(id: string, method?: string): Promise<Invoice> {
+  async pay(id: string, method?: string, amount?: number): Promise<Invoice> {
     const inv = await this.findOne(id);
-    if (inv.status !== InvoiceStatus.UNPAID) {
-      throw new BadRequestException(`Invoice is already ${inv.status}. Only unpaid invoices can be paid.`);
+    if (inv.status === InvoiceStatus.PAID) {
+      throw new BadRequestException('Invoice is already paid.');
     }
-    const amount = String(inv.amount ?? 0);
+    const total = Number(inv.amount ?? 0);
+    const paidSoFar = Number(inv.paidAmount ?? 0);
+    const due = total - paidSoFar;
+    const payAmount = amount != null ? Math.min(Number(amount), due) : due;
+    if (payAmount <= 0) return this.findOne(id);
+
     const paymentMethod = normalizePaymentMethod(method);
     const payment = this.paymentRepo.create({
       invoiceId: inv.id,
-      amount,
+      amount: String(payAmount),
       method: paymentMethod,
     });
     await this.paymentRepo.save(payment);
-    inv.status = InvoiceStatus.PAID;
+    inv.paidAmount = String(paidSoFar + payAmount);
+    if (Number(inv.paidAmount) >= total) inv.status = InvoiceStatus.PAID;
     await this.repo.save(inv);
+
+    const remaining = total - Number(inv.paidAmount);
+    if (remaining > 0) {
+      const productNames = inv.salesOrder?.items?.map((i) => (i as { product?: { name?: string } }).product?.name).filter(Boolean) as string[] | undefined;
+      await this.notificationsService.notifyDuePayment(inv.id, inv.invoiceNumber, remaining, productNames);
+    }
     return this.findOne(id);
+  }
+
+  /** Summary of due amounts for dashboard. */
+  async getDueSummary(): Promise<{ totalPending: number; unpaidCount: number }> {
+    const list = await this.repo.find({ select: ['amount', 'paidAmount', 'status'] });
+    let totalPending = 0;
+    let unpaidCount = 0;
+    for (const inv of list) {
+      if (inv.status === InvoiceStatus.PAID) continue;
+      const due = Number(inv.amount ?? 0) - Number(inv.paidAmount ?? 0);
+      if (due > 0) {
+        totalPending += due;
+        unpaidCount += 1;
+      }
+    }
+    return { totalPending, unpaidCount };
   }
 
   /** List recent payments (e.g. for dashboard). */

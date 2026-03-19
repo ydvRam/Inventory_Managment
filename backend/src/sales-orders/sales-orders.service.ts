@@ -9,10 +9,12 @@ import { SalesOrder, SalesOrderStatus } from './entities/sales-order.entity';
 import { SalesOrderItem } from './entities/sales-order-item.entity';
 import { InventoryService } from '../inventory/inventory.service';
 import { MovementType } from '../inventory/entities/inventory-movement.entity';
+import { PricingService } from '../pricing/pricing.service';
 
 export interface CreateSalesOrderDto {
   customerId: string;
-  items: { productId: string; quantity: number; unitPrice: string }[];
+  items: { productId: string; quantity: number; unitPrice?: string }[];
+  couponCode?: string;
 }
 
 @Injectable()
@@ -23,6 +25,7 @@ export class SalesOrdersService {
     @InjectRepository(SalesOrderItem)
     private readonly itemRepo: Repository<SalesOrderItem>,
     private readonly inventoryService: InventoryService,
+    private readonly pricingService: PricingService,
   ) {}
 
   async findAll(): Promise<SalesOrder[]> {
@@ -44,22 +47,27 @@ export class SalesOrdersService {
   async create(dto: CreateSalesOrderDto): Promise<SalesOrder> {
     if (!dto.items?.length)
       throw new BadRequestException('At least one item is required');
-    const total = dto.items.reduce(
-      (sum, i) => sum + Number(i.unitPrice) * i.quantity,
-      0,
-    );
+
+    const priced = await this.pricingService.calculateOrder(dto.items, dto.couponCode);
+
     const so = this.repo.create({
       customerId: dto.customerId,
-      totalAmount: String(total.toFixed(2)),
+      totalAmount: priced.totalAmount,
+      subtotalBeforeCoupon: priced.subtotalBeforeCoupon,
+      couponDiscountAmount: priced.couponDiscountAmount,
+      couponCode: priced.appliedCouponCode,
       status: SalesOrderStatus.PENDING,
     });
     const saved = await this.repo.save(so);
-    const items = dto.items.map((i) =>
+
+    const items = priced.lines.map((line) =>
       this.itemRepo.create({
         salesOrderId: saved.id,
-        productId: i.productId,
-        quantity: i.quantity,
-        unitPrice: i.unitPrice,
+        productId: line.productId,
+        quantity: line.quantity,
+        baseUnitPrice: line.baseUnitPrice,
+        tierDiscountPercent: line.tierDiscountPercent,
+        unitPrice: line.unitPriceAfterTier,
       }),
     );
     await this.itemRepo.save(items);

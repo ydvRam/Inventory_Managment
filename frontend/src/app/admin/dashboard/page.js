@@ -36,9 +36,9 @@ const colorClasses = {
 };
 
 const quickActions = [
-  { label: "Add Product", href: "/admin/products/new", icon: HiOutlinePlusCircle, color: "blue" },
-  { label: "Create Purchase Order", href: "/admin/purchase-orders/new", icon: HiOutlineShoppingBag, color: "blue" },
-  { label: "Create Sales Order", href: "/admin/sales-orders/new", icon: HiOutlineShoppingCart, color: "blue" },
+  { label: "Add Product", href: "/admin/products", icon: HiOutlinePlusCircle, color: "blue" },
+  { label: "Create Purchase Order", href: "/admin/purchase-orders", icon: HiOutlineShoppingBag, color: "blue" },
+  { label: "Create Sales Order", href: "/admin/sales-orders", icon: HiOutlineShoppingCart, color: "blue" },
   { label: "Generate Invoice", href: "/admin/sales-orders", icon: HiOutlineDocumentText, color: "blue" },
 ];
 
@@ -101,7 +101,6 @@ export default function AdminDashboardPage() {
   return (
     <div className="w-full">
       <div>
-
         <div className="mb-8 w-full">
           <h3 className="text-xl font-semibold text-stone-900 mb-6">Quick Actions</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">

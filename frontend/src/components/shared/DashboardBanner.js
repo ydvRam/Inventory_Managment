@@ -27,7 +27,7 @@ export default function DashboardBanner() {
       <div className="flex flex-col gap-1 p-5">
         <p className="text-black text-base">{dateLabel}</p>
         <p className="text-black font-semibold text-2xl mt-1">
-          Hello , {user?.name || user?.email || "User"}
+          Hello   {user?.name || user?.email || "User"}
         </p>
       </div>
       <div className="shrink-0 relative w-0 md:w-140 min-w-[150px] min-h-[120px] rounded-lg overflow-hidden">

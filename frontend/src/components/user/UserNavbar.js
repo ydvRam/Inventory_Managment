@@ -2,63 +2,42 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { HiOutlineSquares2X2, HiOutlineUserCircle, HiOutlineArrowRightOnRectangle, HiOutlineBars3 } from "react-icons/hi2";
-import { getStoredUser, clearAuth } from "@/lib/auth";
+import { HiOutlineSquares2X2, HiOutlineBars3 } from "react-icons/hi2";
+import { getStoredUser } from "@/lib/auth";
 import NotificationBell from "@/components/shared/NotificationBell";
+import NavbarUserMenu from "@/components/shared/NavbarUserMenu";
+
+const brandIconBox =
+  "inline-flex h-8 w-9 shrink-0 items-center justify-center rounded-md bg-teal-50 text-teal-700";
 
 export default function UserNavbar({ onMenuClick }) {
   const [user, setUser] = useState(null);
   useEffect(() => setUser(getStoredUser()), []);
 
-  function logout() {
-    clearAuth();
-    window.location.href = "/login";
-  }
-
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 bg-white border-b border-stone-200">
-      <div className="flex items-center gap-3">
+    <header className="fixed left-0 right-0 top-0 z-50 flex h-14 items-stretch border-stone-200 bg-white/95  backdrop-blur-sm">
+      <div className="flex min-w-0 items-center gap-2 border-stone-200 pl-3 pr-2 sm:gap-3 md:w-56 md:shrink-0 md:border-r md:px-3">
         <button
           type="button"
           onClick={onMenuClick}
-          className="md:hidden p-2 -ml-1 rounded-lg text-stone-600 hover:bg-stone-100 transition-colors"
+          className="-ml-0.5 rounded-lg p-2 text-stone-600 transition-colors hover:bg-stone-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 md:hidden"
           aria-label="Open menu"
         >
-          <HiOutlineBars3 className="w-6 h-6" />
+          <HiOutlineBars3 className="h-6 w-6" />
         </button>
         <Link
           href="/dashboard"
-          className="group relative flex items-center gap-2 font-semibold text-stone-800"
+          className="group flex min-w-0 flex-1 items-center gap-2.5 rounded-lg py-1 font-semibold text-stone-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 md:gap-3"
         >
-          <HiOutlineSquares2X2 className="w-6 h-6 text-teal-600" />
-          <span>Inventory</span>
-          <span className="absolute left-1/2 top-full -translate-x-1/2 mt-1.5 px-2.5 py-1.5 bg-black text-white text-xs font-medium rounded-lg border border-stone-600 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 z-10 whitespace-nowrap">
-            Dashboard
+          <span className={brandIconBox}>
+            <HiOutlineSquares2X2 className="h-5 w-5" aria-hidden />
           </span>
+          <span className="truncate text-sm sm:text-base">Inventory</span>
         </Link>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex min-w-0 flex-1 items-center justify-end gap-2 px-4 md:px-6">
         <NotificationBell />
-        <Link
-          href="/user"
-          className="group relative flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-stone-100 text-sm text-stone-600"
-        >
-          <HiOutlineUserCircle className="w-5 h-5" />
-          <span>{user?.name || user?.email || "Profile"}</span>
-          <span className="absolute left-1/2 top-full -translate-x-1/2 mt-1.5 px-2.5 py-1.5 bg-black text-white text-xs font-medium rounded-lg border border-stone-600 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 z-10 whitespace-nowrap">
-            Profile
-          </span>
-        </Link>
-        <button
-          onClick={logout}
-          className="hidden md:flex group relative items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-stone-100 text-sm text-stone-600"
-        >
-          <HiOutlineArrowRightOnRectangle className="w-5 h-5" />
-          Logout
-          <span className="absolute left-1/2 top-full -translate-x-1/2 mt-1.5 px-2.5 py-1.5 bg-black text-white text-xs font-medium rounded-lg border border-stone-600 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 z-10 whitespace-nowrap">
-            Logout
-          </span>
-        </button>
+        <NavbarUserMenu user={user} />
       </div>
     </header>
   );

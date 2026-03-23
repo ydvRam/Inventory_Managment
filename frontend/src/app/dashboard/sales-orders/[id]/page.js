@@ -32,6 +32,7 @@ export default function UserSalesOrderDetailPage() {
   const [err, setErr] = useState("");
   const [fulfilling, setFulfilling] = useState(false);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [showFulfillConfirm, setShowFulfillConfirm] = useState(false);
   const [showReturnForm, setShowReturnForm] = useState(false);
   const [returnProductId, setReturnProductId] = useState("");
   const [returnQty, setReturnQty] = useState(1);
@@ -62,7 +63,6 @@ export default function UserSalesOrderDetailPage() {
   }, [id]);
 
   function handleFulfill() {
-    if (!confirm("Fulfill this order? Stock will be deducted from inventory.")) return;
     setFulfilling(true);
     fetch(getApiUrl(`sales-orders/${id}/fulfill`), { method: "POST", headers: getAuthHeaders() })
       .then((res) => {
@@ -73,6 +73,15 @@ export default function UserSalesOrderDetailPage() {
       .then(setSo)
       .catch((e) => setErr(e.message || "Failed to fulfill"))
       .finally(() => setFulfilling(false));
+  }
+
+  function openFulfillDialog() {
+    setShowFulfillConfirm(true);
+  }
+
+  function closeFulfillDialog() {
+    if (fulfilling) return;
+    setShowFulfillConfirm(false);
   }
 
   function handleCreateReturn(e) {
@@ -250,7 +259,7 @@ export default function UserSalesOrderDetailPage() {
         {canFulfill && (
           <button
             type="button"
-            onClick={handleFulfill}
+            onClick={openFulfillDialog}
             disabled={fulfilling}
             className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
           >
@@ -272,6 +281,38 @@ export default function UserSalesOrderDetailPage() {
         <p className="mt-2 text-sm text-stone-500">
           Fulfilling will deduct stock from inventory and set the order to Confirmed.
         </p>
+      )}
+      {showFulfillConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+            <h2 className="text-lg font-semibold text-stone-900 mb-2">Sell items</h2>
+            <p className="text-sm text-stone-600 mb-6">
+              Confirm fulfillment of this sales order. This will deduct stock from inventory and move the order to
+              Confirmed.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeFulfillDialog}
+                disabled={fulfilling}
+                className="px-4 py-2 rounded-lg bg-stone-100 text-stone-700 hover:bg-stone-200 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleFulfill();
+                  setShowFulfillConfirm(false);
+                }}
+                disabled={fulfilling}
+                className="px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
+              >
+                {fulfilling ? "Fulfilling..." : "Confirm sell"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {canReturn && (

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { HiOutlinePlus, HiOutlineTrash } from "react-icons/hi2";
 import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 
@@ -263,9 +262,13 @@ export default function UserNewSalesOrderPage() {
             >
               {loading ? "Creating..." : "Create sales order"}
             </button>
-            <Link href="/dashboard/sales-orders" className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50"
+            >
               Cancel
-            </Link>
+            </button>
           </div>
         </form>
       </div>

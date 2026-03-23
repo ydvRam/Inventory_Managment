@@ -29,6 +29,7 @@ export default function AdminPurchaseOrderDetailPage() {
   const [err, setErr] = useState("");
   const [receiving, setReceiving] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState("");
+  const [showReceiveConfirm, setShowReceiveConfirm] = useState(false);
 
   useEffect(() => {
     if (!getStoredUser()?.id) {
@@ -49,7 +50,6 @@ export default function AdminPurchaseOrderDetailPage() {
   }, [id, router]);
 
   function handleReceive() {
-    if (!confirm("Receive this order? Stock will be added to inventory for each product.")) return;
     setReceiving(true);
     fetch(getApiUrl(`purchase-orders/${id}/receive`), {
       method: "POST",
@@ -65,6 +65,15 @@ export default function AdminPurchaseOrderDetailPage() {
       })
       .catch((e) => setErr(e.message || "Failed to receive order"))
       .finally(() => setReceiving(false));
+  }
+
+  function openReceiveDialog() {
+    setShowReceiveConfirm(true);
+  }
+
+  function closeReceiveDialog() {
+    if (receiving) return;
+    setShowReceiveConfirm(false);
   }
 
   function handlePaymentStatusChange() {
@@ -101,7 +110,7 @@ export default function AdminPurchaseOrderDetailPage() {
         </div>
       </div>
 
-      {err && <p className="text-sm text-red-600 mb-4">{err}</p>}
+      {err && <p className="text-sm text-red-600 mb-4">Error while receiving order</p>}
 
       <div className="bg-white border border-stone-200 rounded-xl overflow-hidden mb-6">
         <div className="px-4 py-3 border-b border-stone-200 bg-stone-50 flex flex-wrap items-center gap-4">
@@ -165,7 +174,7 @@ export default function AdminPurchaseOrderDetailPage() {
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={handleReceive}
+            onClick={openReceiveDialog}
             disabled={receiving}
             className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50"
           >
@@ -174,6 +183,38 @@ export default function AdminPurchaseOrderDetailPage() {
           <p className="text-sm text-stone-500 self-center">
             This will add the ordered quantities to inventory and mark the order as Received.
           </p>
+        </div>
+      )}
+      {showReceiveConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-lg">
+            <h2 className="text-lg font-semibold text-stone-900 mb-2">Receive order</h2>
+            <p className="text-sm text-stone-600 mb-6">
+              Confirm receiving this order. This will add all line quantities to inventory and mark the order as
+              received.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={closeReceiveDialog}
+                disabled={receiving}
+                className="px-4 py-2 rounded-lg bg-stone-100 text-stone-700 hover:bg-stone-200 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleReceive();
+                  setShowReceiveConfirm(false);
+                }}
+                disabled={receiving}
+                className="px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50"
+              >
+                {receiving ? "Receiving..." : "Receive"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
       {isReceived && (

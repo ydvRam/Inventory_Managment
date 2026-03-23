@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
 import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 
 export default function EditProductPage() {
@@ -196,9 +195,13 @@ export default function EditProductPage() {
           >
             {loading ? "Saving..." : "Save changes"}
           </button>
-          <Link href="/products" className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50"
+          >
             Cancel
-          </Link>
+          </button>
         </div>
       </form>
     </div>

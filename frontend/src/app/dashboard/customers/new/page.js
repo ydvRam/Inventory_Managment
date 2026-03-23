@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { getApiUrl, getAuthHeaders, getStoredUser } from "@/lib/auth";
 
 export default function UserNewCustomerPage() {
@@ -98,9 +97,13 @@ export default function UserNewCustomerPage() {
             >
               {loading ? "Saving..." : "Create customer"}
             </button>
-            <Link href="/dashboard/customers" className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="px-4 py-2 border border-stone-300 rounded-lg hover:bg-stone-50"
+            >
               Cancel
-            </Link>
+            </button>
           </div>
         </form>
       </div>

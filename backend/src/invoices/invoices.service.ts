@@ -14,7 +14,7 @@ const GST_RATE = 0.18;
 
 /** Allowed payment methods only. Static – not from API. */
 const ALLOWED_PAYMENT_METHODS = ['Bank', 'Cash', 'Card'] as const;
-type PaymentMethodType = (typeof ALLOWED_PAYMENT_METHODS)[number];
+type PaymentMethodType = (typeof ALLOWED_PAYMENT_METHODS)[number];    
 
 function normalizePaymentMethod(method?: string): PaymentMethodType {
   const m = (method && method.trim()) || 'Cash';

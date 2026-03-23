@@ -7,6 +7,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { Category } from './category.entity';
 import { ProductVariant } from './product-variant.entity';
@@ -59,6 +60,9 @@ export class Product {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedAt: Date | null;
 
   @OneToMany(() => ProductVariant, (v) => v.product)
   variants: ProductVariant[];

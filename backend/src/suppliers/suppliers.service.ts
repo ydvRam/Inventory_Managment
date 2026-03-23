@@ -33,6 +33,6 @@ export class SuppliersService {
 
   async remove(id: string): Promise<void> {
     const s = await this.findOne(id);
-    await this.repo.remove(s);
+    await this.repo.softRemove(s);
   }
 }
